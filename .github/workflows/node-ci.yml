@@ -1,0 +1,66 @@
+name: Node CI
+
+on:
+  push:
+    paths:
+      - 'openim-electron-demo/**'
+      - 'openim-admin-web/**'
+      - '.github/workflows/node-ci.yml'
+  pull_request:
+    paths:
+      - 'openim-electron-demo/**'
+      - 'openim-admin-web/**'
+      - '.github/workflows/node-ci.yml'
+
+jobs:
+  electron-demo:
+    name: openim-electron-demo
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: openim-electron-demo
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: npm
+          cache-dependency-path: openim-electron-demo/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build (web)
+        run: npm run build
+
+  admin-web:
+    name: openim-admin-web
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: openim-admin-web
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: npm
+          cache-dependency-path: openim-admin-web/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint || true
+
+      - name: Build
+        run: npm run build

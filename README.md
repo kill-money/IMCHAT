@@ -1,63 +1,197 @@
-# OpenIM 二次开发工作区（v3.8.x）
+# IMCHAT — OpenIM v3.8.x 二次开发工作区
 
-基于 [OpenIM 二次开发规范手册 v2.0](https://doc.rentsoft.cn/guides/solution/developnewfeatures)，本仓库按 **协议层 → 后端（open-im-server + chat）→ 前端（用户端 Flutter/Web/Electron + 管理端）** 组织，保证多端一致、可维护。
+基于 [OpenIM](https://github.com/openimsdk/open-im-server) 官方协议层构建的全平台即时通讯系统，覆盖 iOS / Android / Web / Windows / macOS 多端，后端采用 Go 微服务架构。
 
-## 1. 仓库结构一览
+---
+
+## 架构总览
 
 ```
-IMCHAT/
-├── open-im-server-main/     # [后端] OpenIM 核心服务 (Go)，端口 10001/10002
-├── openim-chat/             # [后端] 业务服务 (Go)，端口 10008/10009
-├── openim-docker/           # [部署] Docker 编排（MongoDB/Redis/Kafka 等）
-├── webhook-server/          # [可选] Webhook 回调服务
-│
-├── openim_flutter_app/      # [用户端] Flutter（iOS IPA + Android APK）
-├── openim-electron-demo/    # [用户端] Web App + Windows .exe（Electron + React）
-│
-├── openim-admin-web/        # [管理端] 管理后台（UmiJS + Ant Design Pro）
-│
-├── MULTI_PLATFORM_ARCHITECTURE.md   # 多平台架构与 API 说明
-├── REPO_STRUCTURE.md                # 二次开发流程与目录规范
-└── README.md                        # 本文件
+┌──────────────────────────────────────────────────────────────────────┐
+│                            客户端层                                   │
+│                                                                      │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────────┐  │
+│  │  Flutter App    │  │  Electron App   │  │    Admin Web        │  │
+│  │ iOS/Android/Web │  │  Web / Windows  │  │   (UmiJS + AntD)    │  │
+│  │  (Dart/Flutter) │  │ (React+Vite+TS) │  │     React 19        │  │
+│  └────────┬────────┘  └────────┬────────┘  └──────────┬──────────┘  │
+└───────────┼────────────────────┼──────────────────────┼─────────────┘
+            │  HTTP / WebSocket  │                      │ HTTP
+┌───────────▼────────────────────▼──────────────────────▼─────────────┐
+│                           后端服务层                                  │
+│                                                                      │
+│  ┌──────────────────────────┐   ┌──────────────────────────────┐    │
+│  │     OpenIM Server        │   │        OpenIM Chat           │    │
+│  │  :10001  WebSocket 网关   │   │   :10008  用户/登录 HTTP API  │    │
+│  │  :10002  消息/群组 API    │   │   :10009  管理员 API         │    │
+│  │  (Go · Gin · gRPC)       │   │   (Go · Gin · gRPC · GORM)  │    │
+│  └──────────────────────────┘   └──────────────────────────────┘    │
+│                                                                      │
+│  ┌──────────────────────────────────────────────┐                   │
+│  │           Webhook Server  :10006              │                   │
+│  │  消息拦截 / 用户注册回调 / 敏感词过滤 (Go)       │                   │
+│  └──────────────────────────────────────────────┘                   │
+└───────────────────────────────────┬──────────────────────────────────┘
+                                    │
+┌───────────────────────────────────▼──────────────────────────────────┐
+│                          基础设施层 (Docker)                          │
+│                                                                      │
+│   MongoDB      Redis       Kafka (KRaft)    etcd       MinIO        │
+│   (消息存储)   (缓存/会话)   (消息队列)     (服务发现)  (文件存储)      │
+│                                                                      │
+│   Prometheus + Grafana + AlertManager  (可选监控, --profile m)       │
+└──────────────────────────────────────────────────────────────────────┘
 ```
 
-**协议层**：OpenIM 使用独立仓库 [openimsdk/protocol](https://github.com/openimsdk/protocol)。若需改 RPC/消息格式，先 fork 并修改 protocol，执行 `mage GenGo` 后，再在 open-im-server 中通过 `go.mod replace` 指向本地 protocol。
+---
 
-## 2. 开发流程（手册标准步骤）
+## 模块说明
 
-| 步骤 | 仓库/目录 | 说明 |
+| 目录 | 语言/框架 | 作用 |
 |------|-----------|------|
-| 3.1 协议层 | protocol（需单独 clone） | 改 proto → `mage GenGo` → 更新 constant/sdkws |
-| 3.2 后端 | open-im-server-main + openim-chat | API/RPC + controller → cache → database/model |
-| 3.3 前端 | openim_flutter_app / openim-electron-demo / openim-admin-web | 用户端三端 + 管理端，SDK 与 API 基地址统一 |
-| 3.4 数据库 | open-im-server pkg/common/storage/model | 仅改模型层，禁止直接 SQL |
+| `open-im-server-main/` | Go 1.22 · Gin · gRPC · Kafka | OpenIM 核心服务，处理消息收发、群组、关系链 |
+| `openim-chat/` | Go 1.22 · Gin · gRPC · GORM | 业务层服务，负责注册/登录/用户管理 |
+| `webhook-server/` | Go 1.26 · net/http | 轻量 Webhook 回调服务，消息拦截与敏感词过滤 |
+| `openim_flutter_app/` | Flutter 3 · Dart · Provider | 统一多平台客户端 (iOS/Android/Web/Windows/macOS) |
+| `openim-electron-demo/` | React 18 · Vite · Electron · TS | Web + Windows 桌面端，支持音视频 (LiveKit) |
+| `openim-admin-web/` | React 19 · UmiJS · Ant Design Pro v6 | 管理后台，用户/群组/消息/系统管理 |
+| `openim-docker/` | Docker Compose | 一键启动全部基础设施 + 服务 |
 
-## 3. 快速启动（本地）
+---
+
+## 端口速查
+
+| 端口 | 服务 | 说明 |
+|------|------|------|
+| `10001` | open-im-server | WebSocket 长连接网关 |
+| `10002` | open-im-server | HTTP REST API |
+| `10008` | openim-chat | 用户注册/登录 API |
+| `10009` | openim-chat | 管理员 API |
+| `10006` | webhook-server | Webhook 回调接收 |
+| `27017` | MongoDB | 数据库 |
+| `6379` | Redis | 缓存 |
+| `9092` | Kafka | 消息队列 |
+| `12379` | etcd | 服务注册发现 |
+| `10005` | MinIO | 对象存储 |
+
+---
+
+## 快速启动
+
+### 前置要求
+
+- Docker Desktop 4.x+
+- Go 1.22+
+- Flutter 3.x（含 Dart 3.6+）
+- Node.js 18+
+
+### 1. 启动基础设施 + 后端服务
 
 ```bash
-# 1. 组件（MongoDB/Redis 等）
-cd openim-docker && docker compose up -d
-
-# 2. OpenIM Server + Chat（需先编译或使用已编译二进制）
-# 见 open-im-server-main / openim-chat 各自 README
-
-# 3. 用户端 - Flutter（移动端 + 可跑 Web）
-cd openim_flutter_app && flutter run -d chrome   # 或 -d <android_id> / windows
-
-# 4. 用户端 - Web / Windows
-cd openim-electron-demo && npm install && npm run dev
-
-# 5. 管理后台
-cd openim-admin-web && npm install && npm run start
+cd openim-docker
+docker compose up -d
 ```
 
-## 4. 参考资源
+### 2. 启动 Webhook 服务（可选）
 
-- 二次开发指南：https://doc.rentsoft.cn/guides/solution/developnewfeatures  
-- open-im-server：https://github.com/openimsdk/open-im-server（v3.8.x）  
-- chat：https://github.com/openimsdk/chat  
-- protocol：https://github.com/openimsdk/protocol  
-- Flutter Demo 官方：https://github.com/openimsdk/open-im-flutter-demo  
-- Electron Demo 官方：https://github.com/openimsdk/openim-electron-demo  
+```bash
+cd webhook-server
+go run main.go
+```
 
-当前工作区兼容版本：**v3.8.x（2026 年 3 月）**。
+### 3. Flutter 客户端
+
+```bash
+cd openim_flutter_app
+flutter pub get
+
+# 使用默认后端 IP (192.168.0.136)
+flutter run -d windows
+
+# 指定后端 IP（真机/远程部署必须）
+flutter run -d android --dart-define=API_HOST=192.168.1.100
+flutter run -d chrome  --dart-define=API_HOST=192.168.1.100
+```
+
+### 4. Electron / Web 客户端
+
+```bash
+cd openim-electron-demo
+npm install && npm run dev
+```
+
+### 5. 管理后台
+
+```bash
+cd openim-admin-web
+npm install && npm run dev
+```
+
+---
+
+## 开发命令
+
+### Flutter
+
+```bash
+flutter pub get          # 安装依赖
+flutter analyze          # 静态分析
+flutter test             # 全量测试
+flutter test test/widget_test.dart   # 单个测试文件
+flutter build apk        # Android APK
+flutter build web        # Web
+flutter build windows    # Windows 桌面
+```
+
+### Go（适用于各 Go 模块目录）
+
+```bash
+go build ./...
+go test ./...
+go vet ./...
+```
+
+### Node（electron-demo / admin-web）
+
+```bash
+npm install
+npm run dev      # 开发模式
+npm run build    # 生产构建
+npm run lint     # 代码检查
+```
+
+---
+
+## 环境配置
+
+Flutter 客户端通过 `--dart-define` 编译时注入（见 `openim_flutter_app/lib/core/api/api_client.dart`）：
+
+| 变量 | 默认值 | 说明 |
+|------|--------|------|
+| `API_HOST` | `192.168.0.136` | 后端服务主机 IP |
+
+Docker 基础设施端口/密码配置见 `openim-docker/.env`。
+
+---
+
+## CI/CD
+
+GitHub Actions 自动化流水线（见 `.github/workflows/`）：
+
+| 工作流 | 触发路径 | 检查内容 |
+|--------|----------|---------|
+| `flutter-ci.yml` | `openim_flutter_app/**` | analyze + test |
+| `go-ci.yml` | `open-im-server-main/**`, `openim-chat/**`, `webhook-server/**` | build + vet + test |
+| `node-ci.yml` | `openim-electron-demo/**`, `openim-admin-web/**` | lint + build |
+
+---
+
+## 技术栈
+
+| 层次 | 技术 |
+|------|------|
+| 后端 | Go · Gin · gRPC · MongoDB · Redis · Kafka · etcd · MinIO |
+| Flutter | Dart · Provider · http · window_manager · system_tray |
+| Web/Electron | React 18/19 · TypeScript · Vite · Ant Design · Zustand · LiveKit |
+| 管理台 | UmiJS max · Ant Design Pro v6 · React 19 |
+| 基础设施 | Docker Compose · Prometheus · Grafana |

@@ -1,20 +1,98 @@
-# Flutter build
+# ─── Flutter ───────────────────────────────────────────────────────────────────
 openim_flutter_app/build/
+openim_flutter_app/.dart_tool/
+openim_flutter_app/.flutter-plugins
+openim_flutter_app/.flutter-plugins-dependencies
+openim_flutter_app/.packages
+openim_flutter_app/pubspec.lock
+# Keep android/ios gitignore intact — they handle their own build dirs
 
-# Python
-.venv/
-__pycache__/
-*.pyc
-*.pyo
-
-# Node
-node_modules/
-
-# Go binaries
+# ─── Go ────────────────────────────────────────────────────────────────────────
 *.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
 *.out
 _output/
+vendor/
+# Go workspace
+go.work.sum
 
-# OS
+# ─── Node / npm / yarn / pnpm ──────────────────────────────────────────────────
+node_modules/
+dist/
+.next/
+.nuxt/
+.cache/
+.parcel-cache/
+*.tsbuildinfo
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Electron build output
+openim-electron-demo/dist-electron/
+openim-electron-demo/release/
+
+# Admin web build
+openim-admin-web/dist/
+openim-admin-web/.umi/
+openim-admin-web/.umi-production/
+
+# ─── Python ────────────────────────────────────────────────────────────────────
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+coverage.xml
+
+# ─── Docker / Infrastructure ───────────────────────────────────────────────────
+openim-docker/data/
+openim-docker/logs/
+openim-docker/.env.local
+openim-docker/components/prometheus/data/
+openim-docker/components/grafana/data/
+
+# ─── IDE & Editor ──────────────────────────────────────────────────────────────
+.idea/
+.vscode/settings.json
+*.swp
+*.swo
+*~
+
+# ─── OS ────────────────────────────────────────────────────────────────────────
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
+desktop.ini
+
+# ─── Secrets / Credentials ─────────────────────────────────────────────────────
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+*.p12
+*.jks

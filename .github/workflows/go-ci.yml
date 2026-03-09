@@ -1,0 +1,91 @@
+name: Go CI
+
+on:
+  push:
+    paths:
+      - 'open-im-server-main/**'
+      - 'openim-chat/**'
+      - 'webhook-server/**'
+      - '.github/workflows/go-ci.yml'
+  pull_request:
+    paths:
+      - 'open-im-server-main/**'
+      - 'openim-chat/**'
+      - 'webhook-server/**'
+      - '.github/workflows/go-ci.yml'
+
+jobs:
+  webhook-server:
+    name: webhook-server
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: webhook-server
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: webhook-server/go.mod
+          cache-dependency-path: webhook-server/go.sum
+
+      - name: Build
+        run: go build ./...
+
+      - name: Vet
+        run: go vet ./...
+
+      - name: Test
+        run: go test ./...
+
+  openim-chat:
+    name: openim-chat
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: openim-chat
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: openim-chat/go.mod
+          cache-dependency-path: openim-chat/go.sum
+
+      - name: Build
+        run: go build ./...
+
+      - name: Vet
+        run: go vet ./...
+
+      - name: Test
+        run: go test ./...
+
+  open-im-server:
+    name: open-im-server
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: open-im-server-main
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: open-im-server-main/go.mod
+          cache-dependency-path: open-im-server-main/go.sum
+
+      - name: Build
+        run: go build ./...
+
+      - name: Vet
+        run: go vet ./...
+
+      - name: Test
+        run: go test ./...
