@@ -1,9 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Modify this file to customize your launch splash screen -->
+<!-- Native window background: plain white so the Flutter SplashPage is the only visible splash -->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <item>
-        <bitmap
-            android:gravity="fill"
-            android:src="@drawable/android_splash_launch_v1_0_0" />
-    </item>
+    <item android:drawable="@android:color/white" />
 </layer-list>

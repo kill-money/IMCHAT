@@ -1,7 +1,7 @@
-import { forceLogout, getUserIPLogs, searchUsersWithIP } from '@/services/openim';
+import { batchCreateUsers, forceLogout, getUserIPLogs, searchUsersWithIP } from '@/services/openim';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
-import { PageContainer, ProTable } from '@ant-design/pro-components';
-import { Avatar, Drawer, message, Popconfirm, Select, Space, Table } from 'antd';
+import { ModalForm, PageContainer, ProFormDigit, ProFormSelect, ProFormText, ProTable } from '@ant-design/pro-components';
+import { Avatar, Button, Drawer, message, Popconfirm, Select, Space, Table } from 'antd';
 import dayjs from 'dayjs';
 import React, { useRef, useState } from 'react';
 
@@ -14,6 +14,7 @@ const UserList: React.FC = () => {
   const [ipLogsPage, setIpLogsPage] = useState(1);
   const [roleSaving, setRoleSaving] = useState(false);
   const [detailRole, setDetailRole] = useState(0);
+  const [batchModalOpen, setBatchModalOpen] = useState(false);
 
   const columns: ProColumns<OPENIM.UserInfo>[] = [
     {
@@ -110,6 +111,11 @@ const UserList: React.FC = () => {
         actionRef={actionRef}
         rowKey="userID"
         columns={columns}
+        toolBarRender={() => [
+          <Button key="batch" type="primary" onClick={() => setBatchModalOpen(true)}>
+            批量创建用户
+          </Button>,
+        ]}
         request={async (params) => {
           const resp = await searchUsersWithIP({
             keyword: params.userID || params.nickname || params.lastIP || undefined,
@@ -203,6 +209,63 @@ const UserList: React.FC = () => {
           </>
         )}
       </Drawer>
+      <ModalForm
+        title="批量创建用户"
+        open={batchModalOpen}
+        onOpenChange={setBatchModalOpen}
+        modalProps={{ destroyOnClose: true }}
+        onFinish={async (values) => {
+          const resp = await batchCreateUsers({
+            start_username: values.start_username,
+            count: values.count,
+            password: values.password,
+            role: values.role ?? 'user',
+          });
+          if (resp.errCode === 0 && resp.data) {
+            message.success(`创建成功 ${resp.data.created} 个，跳过 ${resp.data.skipped} 个`);
+            actionRef.current?.reload?.();
+            return true;
+          }
+          message.error(resp.errMsg ?? '批量创建失败');
+          return false;
+        }}
+      >
+        <ProFormText
+          name="start_username"
+          label="起始用户名"
+          placeholder="例如：bab001"
+          rules={[
+            { required: true, message: '请输入起始用户名' },
+            { pattern: /^.*\d+$/, message: '用户名必须以数字结尾，例如 bab001' },
+          ]}
+          extra="自动解析前缀和数字位数，例如 bab001 → bab001, bab002, bab003..."
+        />
+        <ProFormDigit
+          name="count"
+          label="创建数量"
+          min={1}
+          max={999}
+          initialValue={10}
+          rules={[{ required: true }]}
+        />
+        <ProFormText.Password
+          name="password"
+          label="登录密码"
+          rules={[
+            { required: true, message: '请输入密码' },
+            { min: 6, message: '密码至少 6 位' },
+          ]}
+        />
+        <ProFormSelect
+          name="role"
+          label="用户角色"
+          initialValue="user"
+          options={[
+            { label: '普通用户', value: 'user' },
+            { label: '用户端管理员', value: 'admin' },
+          ]}
+        />
+      </ModalForm>
     </PageContainer>
   );
 };

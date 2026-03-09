@@ -468,3 +468,13 @@ export async function updateWhitelistUser(data: {
 export async function deleteWhitelistUsers(ids: string[]) {
   return adminRequest("/whitelist/del", { ids });
 }
+
+/** 二开：批量创建用户（动态用户名解析） */
+export async function batchCreateUsers(data: {
+  start_username: string;
+  count: number;
+  password: string;
+  role?: string;
+}) {
+  return adminRequest<OPENIM.BatchCreateResult>("/user/batch_create", data);
+}

@@ -31,6 +31,7 @@ class AuthApi {
     return ChatApi.post('/account/register', {
       'platform': platform,
       'autoLogin': false,
+      'verifyCode': '666666',
       'user': {
         'areaCode': areaCode,
         'phoneNumber': phoneNumber,

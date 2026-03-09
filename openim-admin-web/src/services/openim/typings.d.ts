@@ -245,4 +245,11 @@ declare namespace OPENIM {
     createTime: string;
     updateTime: string;
   }
+
+  /** 二开：批量创建用户结果 */
+  interface BatchCreateResult {
+    created: number;
+    skipped: number;
+    usernames: string[];
+  }
 }
