@@ -97,7 +97,10 @@ class _LoginPageState extends State<LoginPage> {
                         width: 80,
                         child: DropdownButtonFormField<String>(
                           value: _areaCode,
-                          decoration: const InputDecoration(isDense: true),
+                          decoration: const InputDecoration(
+                            isDense: true,
+                            contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+                          ),
                           items: const [
                             DropdownMenuItem(value: '+86', child: AppText('+86')),
                             DropdownMenuItem(value: '+1', child: AppText('+1')),
