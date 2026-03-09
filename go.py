@@ -1,6 +1,6 @@
 import requests
 
-API_KEY = 'sk-9jioY7B5kHGme9x1TO8bQD61ZCjjqWjRflAxo3hOdWzfj9o8'
+API_KEY = 'YOUR_302AI_API_KEY'
 
 url = "https://api.302.ai/v1/chat/completions"
 

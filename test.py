@@ -13,7 +13,7 @@ payload = json.dumps({
 })
 headers = {
    'Accept': 'application/json',
-   'Authorization': 'Bearer sk-ikt6bihMlypWEFrCjkgOMlI5cdgubwlneLoS2oYvhKUUHz0s',
+   'Authorization': 'Bearer YOUR_302AI_API_KEY',
    'Content-Type': 'application/json'
 }
 conn.request("POST", "/v1/chat/completions", payload, headers)
