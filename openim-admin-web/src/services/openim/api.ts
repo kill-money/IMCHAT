@@ -424,3 +424,47 @@ export async function deleteClientLogs(logIDs: string[]) {
 export async function forceLogout(userID: string, platformID?: number) {
   return imRequest("/auth/force_logout", { userID, platformID });
 }
+
+// ==================== 白名单管理（二开）====================
+
+/** 搜索白名单 */
+export async function searchWhitelist(params: {
+  keyword?: string;
+  status?: number; // -1=全部 0=禁用 1=启用
+  pageNum?: number;
+  showNum?: number;
+}) {
+  return adminRequest<{ total: number; list: OPENIM.WhitelistUser[] }>("/whitelist/search", {
+    keyword: params.keyword ?? "",
+    status: params.status ?? -1,
+    pageNum: params.pageNum ?? 1,
+    showNum: params.showNum ?? 20,
+  });
+}
+
+/** 添加白名单 */
+export async function addWhitelistUser(data: {
+  identifier: string;
+  type: number; // 1=phone 2=email
+  role?: string;
+  permissions?: string[];
+  remark?: string;
+}) {
+  return adminRequest<OPENIM.WhitelistUser>("/whitelist/add", data);
+}
+
+/** 修改白名单 */
+export async function updateWhitelistUser(data: {
+  id: string;
+  role?: string;
+  permissions?: string[];
+  status?: number;
+  remark?: string;
+}) {
+  return adminRequest("/whitelist/update", data);
+}
+
+/** 删除白名单 */
+export async function deleteWhitelistUsers(ids: string[]) {
+  return adminRequest("/whitelist/del", { ids });
+}

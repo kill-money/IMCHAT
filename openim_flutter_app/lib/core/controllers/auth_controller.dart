@@ -81,7 +81,11 @@ class AuthController extends ChangeNotifier {
 
       final errCode = (res['errCode'] ?? 0) as int;
       if (errCode != 0) {
-        _error = _mapError(errCode, res['errMsg']?.toString() ?? '');
+        // errDlt 包含服务端详细信息（如白名单/锁定提示），code 20012 时优先展示
+        final errDlt = res['errDlt']?.toString() ?? '';
+        _error = errDlt.isNotEmpty && errCode == 20012
+            ? errDlt
+            : _mapError(errCode, res['errMsg']?.toString() ?? '');
         _loading = false;
         notifyListeners();
         return false;

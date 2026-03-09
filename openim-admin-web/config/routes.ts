@@ -91,6 +91,18 @@ export default [
     ],
   },
   {
+    path: "/security",
+    name: "安全控制",
+    icon: "safety",
+    routes: [
+      {
+        path: "/security/whitelist",
+        name: "登录白名单",
+        component: "./security/whitelist",
+      },
+    ],
+  },
+  {
     path: "/banner-manage",
     name: "Banner管理",
     icon: "picture",

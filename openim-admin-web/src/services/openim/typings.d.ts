@@ -232,4 +232,17 @@ declare namespace OPENIM {
     total: number;
     logs: UserIPLogEntry[];
   }
+
+  /** 二开：白名单用户 */
+  interface WhitelistUser {
+    id: string;
+    identifier: string;       // +8613800138000 or email
+    type: number;             // 1=phone 2=email
+    role: string;             // admin/operator/user
+    permissions: string[];    // view_ip/ban_user/view_chat_log/broadcast
+    status: number;           // 1=active 0=disabled
+    remark: string;
+    createTime: string;
+    updateTime: string;
+  }
 }
