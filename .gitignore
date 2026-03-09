@@ -71,6 +71,9 @@ openim-docker/.env.local
 openim-docker/components/prometheus/data/
 openim-docker/components/grafana/data/
 
+# ─── Claude Code ───────────────────────────────────────────────────────────────
+.claude/
+
 # ─── IDE & Editor ──────────────────────────────────────────────────────────────
 .idea/
 .vscode/settings.json
