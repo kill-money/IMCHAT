@@ -27,7 +27,7 @@ class _AuthPageState extends State<AuthPage>
   final _regPassCtrl = TextEditingController();
   final _regInviteCtrl = TextEditingController();
 
-  String _areaCode = '+86';
+  final String _areaCode = '+86';
   bool _loginObscure = true;
   bool _regObscure = true;
 
@@ -104,20 +104,17 @@ class _AuthPageState extends State<AuthPage>
     }
   }
 
-  Widget _areaDropdown() => SizedBox(
-        width: 80,
-        child: DropdownButtonFormField<String>(
-          value: _areaCode,
-          isExpanded: true,
-          decoration: const InputDecoration(
-            isDense: true,
-            contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 12),
-          ),
-          items: const [
-            DropdownMenuItem(value: '+86', child: Text('+86')),
-            DropdownMenuItem(value: '+1', child: Text('+1')),
-          ],
-          onChanged: (v) => setState(() => _areaCode = v!),
+  Widget _areaCodeLabel() => Container(
+        width: 52,
+        height: 48,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          border: Border.all(color: const Color(0xFFEEEEEE)),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: const Text(
+          '+86',
+          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
         ),
       );
 
@@ -148,7 +145,7 @@ class _AuthPageState extends State<AuthPage>
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Row(children: [
-            _areaDropdown(),
+            _areaCodeLabel(),
             const SizedBox(width: AppSpacing.sm),
             Expanded(
               child: TextField(
@@ -195,7 +192,7 @@ class _AuthPageState extends State<AuthPage>
           ),
           const SizedBox(height: AppSpacing.lg),
           Row(children: [
-            _areaDropdown(),
+            _areaCodeLabel(),
             const SizedBox(width: AppSpacing.sm),
             Expanded(
               child: TextField(
