@@ -26,15 +26,19 @@ class AuthApi {
     required String password,
     required String nickname,
     String? invitationCode,
+    int platform = 1,
   }) async {
     return ChatApi.post('/account/register', {
+      'platform': platform,
+      'autoLogin': false,
       'user': {
         'areaCode': areaCode,
         'phoneNumber': phoneNumber,
         'password': password,
         'nickname': nickname,
       },
-      if (invitationCode != null) 'invitationCode': invitationCode,
+      if (invitationCode != null && invitationCode.isNotEmpty)
+        'invitationCode': invitationCode,
     });
   }
 

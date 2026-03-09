@@ -1,6 +1,6 @@
 import 'dart:async' show TimeoutException;
 import 'dart:io' show SocketException;
-import 'package:flutter/foundation.dart';
+import 'package:flutter/foundation.dart' show ChangeNotifier, kDebugMode;
 import '../api/auth_api.dart';
 import '../api/api_client.dart';
 import '../models/user_info.dart';
@@ -116,10 +116,12 @@ class AuthController extends ChangeNotifier {
       return true;
     } on TimeoutException {
       _error = '网络请求超时，请检查网络连接后重试';
-    } on SocketException {
-      _error = '无法连接到服务器，请检查网络设置';
-    } catch (_) {
-      _error = '登录失败，请稍后重试';
+    } on SocketException catch (e) {
+      _error = kDebugMode
+          ? '无法连接到服务器（${ApiConfig.chatApiBase}）: $e'
+          : '无法连接到服务器，请检查网络设置';
+    } catch (e) {
+      _error = kDebugMode ? '登录异常: $e' : '登录失败，请稍后重试';
     }
 
     _loading = false;
@@ -160,10 +162,12 @@ class AuthController extends ChangeNotifier {
       return true;
     } on TimeoutException {
       _error = '网络请求超时，请检查网络连接后重试';
-    } on SocketException {
-      _error = '无法连接到服务器，请检查网络设置';
-    } catch (_) {
-      _error = '注册失败，请稍后重试';
+    } on SocketException catch (e) {
+      _error = kDebugMode
+          ? '无法连接到服务器（${ApiConfig.chatApiBase}）: $e'
+          : '无法连接到服务器，请检查网络设置';
+    } catch (e) {
+      _error = kDebugMode ? '注册异常: $e' : '注册失败，请稍后重试';
     }
 
     _loading = false;
@@ -171,9 +175,14 @@ class AuthController extends ChangeNotifier {
     return false;
   }
 
-  /// 供 UI 层设置客户端校验错误（如空字段检查）
   void setError(String message) {
     _error = message;
+    notifyListeners();
+  }
+
+  void clearError() {
+    if (_error.isEmpty) return;
+    _error = '';
     notifyListeners();
   }
 
