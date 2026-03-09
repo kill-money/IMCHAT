@@ -4,7 +4,6 @@ import 'spacing.dart';
 import 'typography.dart';
 
 class AppTheme {
-  /// 仅亮色模式生效，深色模式后续统一适配
   static ThemeData lightTheme = ThemeData(
     useMaterial3: true,
     brightness: Brightness.light,
@@ -26,10 +25,43 @@ class AppTheme {
       elevation: 0.5,
       centerTitle: true,
       titleTextStyle: AppTypography.title,
-      iconTheme: IconThemeData(
-        color: AppColors.primary,
-        size: 24,
+      iconTheme: IconThemeData(color: AppColors.primary, size: 24),
+    ),
+    // ── 统一输入框焦点色，全局强制绿色，禁止任何页面覆盖 ──────────────
+    inputDecorationTheme: InputDecorationTheme(
+      contentPadding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.lg,
+        vertical: AppSpacing.md,
       ),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: AppColors.divider),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: AppColors.divider),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: AppColors.primary, width: 2),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: AppColors.danger),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: AppColors.danger, width: 2),
+      ),
+      prefixIconColor: AppColors.textSecondary,
+      labelStyle: AppTypography.body.copyWith(color: AppColors.textSecondary),
+      floatingLabelStyle: AppTypography.small.copyWith(color: AppColors.primary),
+    ),
+    // ── 统一 SnackBar 样式 ────────────────────────────────────────────
+    snackBarTheme: SnackBarThemeData(
+      behavior: SnackBarBehavior.floating,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      contentTextStyle: AppTypography.body.copyWith(color: Colors.white),
     ),
     dividerTheme: const DividerThemeData(
       color: AppColors.divider,
@@ -61,4 +93,3 @@ class AppTheme {
     scaffoldBackgroundColor: const Color(0xFF1A1A1A),
   );
 }
-

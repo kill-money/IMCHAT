@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../core/controllers/auth_controller.dart';
 import '../theme/colors.dart';
 import '../theme/spacing.dart';
 import '../widgets/ui/app_button.dart';
 import '../widgets/ui/app_card.dart';
+import '../widgets/ui/app_feedback.dart';
 import '../widgets/ui/app_text.dart';
 
 class RegisterPage extends StatefulWidget {
@@ -20,6 +22,7 @@ class _RegisterPageState extends State<RegisterPage> {
   final _passwordController = TextEditingController();
   final _inviteCodeController = TextEditingController();
   String _areaCode = '+86';
+  bool _obscurePassword = true;
 
   @override
   void dispose() {
@@ -31,25 +34,31 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 
   void _register() async {
+    HapticFeedback.lightImpact();
+
+    final nickname = _nicknameController.text.trim();
+    final phone = _phoneController.text.trim();
+    final password = _passwordController.text;
+
+    if (nickname.isEmpty || phone.isEmpty || password.isEmpty) {
+      context.read<AuthController>().setError('请填写昵称、手机号和密码');
+      return;
+    }
+
     final auth = context.read<AuthController>();
     final success = await auth.register(
-      nickname: _nicknameController.text.trim(),
+      nickname: nickname,
       areaCode: _areaCode,
-      phoneNumber: _phoneController.text.trim(),
-      password: _passwordController.text,
+      phoneNumber: phone,
+      password: password,
       invitationCode: _inviteCodeController.text.trim(),
     );
     if (!mounted) return;
     if (success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('注册成功，请登录')),
-      );
+      AppFeedback.success(context, '注册成功，请登录');
       Navigator.of(context).pop();
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(auth.error)),
-      );
     }
+    // 失败时 auth.error 已更新，inline 区域自动展示
   }
 
   @override
@@ -61,12 +70,7 @@ class _RegisterPageState extends State<RegisterPage> {
     return Scaffold(
       backgroundColor: AppColors.pageBackground,
       appBar: AppBar(
-        backgroundColor: AppColors.cardBackground,
-        elevation: 0,
-        title: const AppText(
-          '注册',
-          isTitle: true,
-        ),
+        title: const AppText('注册账号', isTitle: true),
         centerTitle: true,
       ),
       body: Center(
@@ -79,17 +83,12 @@ class _RegisterPageState extends State<RegisterPage> {
               margin: EdgeInsets.zero,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const AppText(
-                    '创建账号',
-                    isTitle: true,
-                  ),
-                  const SizedBox(height: AppSpacing.xl),
                   TextField(
                     controller: _nicknameController,
                     decoration: const InputDecoration(
                       labelText: '昵称',
-                      border: OutlineInputBorder(),
                       prefixIcon: Icon(Icons.person),
                     ),
                   ),
@@ -100,14 +99,7 @@ class _RegisterPageState extends State<RegisterPage> {
                         width: 80,
                         child: DropdownButtonFormField<String>(
                           value: _areaCode,
-                          decoration: const InputDecoration(
-                            border: OutlineInputBorder(),
-                            isDense: true,
-                            contentPadding: EdgeInsets.symmetric(
-                              horizontal: AppSpacing.sm,
-                              vertical: AppSpacing.md,
-                            ),
-                          ),
+                          decoration: const InputDecoration(isDense: true),
                           items: const [
                             DropdownMenuItem(value: '+86', child: AppText('+86')),
                             DropdownMenuItem(value: '+1', child: AppText('+1')),
@@ -122,7 +114,6 @@ class _RegisterPageState extends State<RegisterPage> {
                           keyboardType: TextInputType.phone,
                           decoration: const InputDecoration(
                             labelText: '手机号',
-                            border: OutlineInputBorder(),
                             prefixIcon: Icon(Icons.phone),
                           ),
                         ),
@@ -132,23 +123,66 @@ class _RegisterPageState extends State<RegisterPage> {
                   const SizedBox(height: AppSpacing.lg),
                   TextField(
                     controller: _passwordController,
-                    obscureText: true,
-                    decoration: const InputDecoration(
+                    obscureText: _obscurePassword,
+                    decoration: InputDecoration(
                       labelText: '密码',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.lock),
+                      prefixIcon: const Icon(Icons.lock),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _obscurePassword
+                              ? Icons.visibility_off
+                              : Icons.visibility,
+                          color: AppColors.textSecondary,
+                        ),
+                        onPressed: () =>
+                            setState(() => _obscurePassword = !_obscurePassword),
+                      ),
                     ),
                   ),
                   const SizedBox(height: AppSpacing.lg),
                   TextField(
                     controller: _inviteCodeController,
                     decoration: const InputDecoration(
-                      labelText: '邀请码 (选填)',
-                      border: OutlineInputBorder(),
+                      labelText: '邀请码（选填）',
                       prefixIcon: Icon(Icons.card_giftcard),
                     ),
                   ),
-                  const SizedBox(height: AppSpacing.xl),
+                  const SizedBox(height: AppSpacing.lg),
+                  // ── 统一内联错误区 ────────────────────────────────────
+                  AnimatedSize(
+                    duration: const Duration(milliseconds: 200),
+                    child: auth.error.isNotEmpty
+                        ? Container(
+                            margin: const EdgeInsets.only(bottom: AppSpacing.md),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: AppSpacing.md,
+                              vertical: AppSpacing.sm,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.danger.withValues(alpha: 0.08),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: AppColors.danger.withValues(alpha: 0.3),
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.error_outline,
+                                    color: AppColors.danger, size: 16),
+                                const SizedBox(width: AppSpacing.sm),
+                                Expanded(
+                                  child: AppText(
+                                    auth.error,
+                                    isSmall: true,
+                                    style: const TextStyle(
+                                        color: AppColors.danger),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+                        : const SizedBox.shrink(),
+                  ),
                   AppButton(
                     label: '注 册',
                     onPressed: auth.loading ? null : _register,

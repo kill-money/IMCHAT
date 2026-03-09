@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../core/controllers/auth_controller.dart';
 import '../theme/colors.dart';
@@ -28,20 +29,27 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   void _login() async {
+    HapticFeedback.lightImpact();
+
+    final phone = _phoneController.text.trim();
+    final password = _passwordController.text;
+
+    if (phone.isEmpty || password.isEmpty) {
+      context.read<AuthController>().setError('请填写手机号和密码');
+      return;
+    }
+
     final auth = context.read<AuthController>();
     final success = await auth.login(
       areaCode: _areaCode,
-      phoneNumber: _phoneController.text.trim(),
-      password: _passwordController.text,
+      phoneNumber: phone,
+      password: password,
     );
     if (!mounted) return;
     if (success) {
       Navigator.of(context).pushReplacementNamed('/home');
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(auth.error)),
-      );
     }
+    // 失败时 auth.error 已更新，inline 区域自动展示，无需 SnackBar
   }
 
   @override
@@ -69,10 +77,18 @@ class _LoginPageState extends State<LoginPage> {
                     size: 64,
                     color: AppColors.primary,
                   ),
-                  const SizedBox(height: AppSpacing.md),
+                  const SizedBox(height: AppSpacing.sm),
                   const AppText(
-                    '温暖行动 · 登录',
+                    '惠泽苍生',
                     isTitle: true,
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+                  const AppText(
+                    '精准扶贫 · 共同富裕',
+                    isSmall: true,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: AppColors.textSecondary),
                   ),
                   const SizedBox(height: AppSpacing.xl),
                   Row(
@@ -81,14 +97,7 @@ class _LoginPageState extends State<LoginPage> {
                         width: 80,
                         child: DropdownButtonFormField<String>(
                           value: _areaCode,
-                          decoration: const InputDecoration(
-                            border: OutlineInputBorder(),
-                            isDense: true,
-                            contentPadding: EdgeInsets.symmetric(
-                              horizontal: AppSpacing.sm,
-                              vertical: AppSpacing.md,
-                            ),
-                          ),
+                          decoration: const InputDecoration(isDense: true),
                           items: const [
                             DropdownMenuItem(value: '+86', child: AppText('+86')),
                             DropdownMenuItem(value: '+1', child: AppText('+1')),
@@ -103,7 +112,6 @@ class _LoginPageState extends State<LoginPage> {
                           keyboardType: TextInputType.phone,
                           decoration: const InputDecoration(
                             labelText: '手机号',
-                            border: OutlineInputBorder(),
                             prefixIcon: Icon(Icons.phone),
                           ),
                         ),
@@ -116,13 +124,13 @@ class _LoginPageState extends State<LoginPage> {
                     obscureText: _obscurePassword,
                     decoration: InputDecoration(
                       labelText: '密码',
-                      border: const OutlineInputBorder(),
                       prefixIcon: const Icon(Icons.lock),
                       suffixIcon: IconButton(
                         icon: Icon(
                           _obscurePassword
                               ? Icons.visibility_off
                               : Icons.visibility,
+                          color: AppColors.textSecondary,
                         ),
                         onPressed: () =>
                             setState(() => _obscurePassword = !_obscurePassword),
@@ -130,23 +138,48 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                     onSubmitted: (_) => _login(),
                   ),
-                  const SizedBox(height: AppSpacing.xl),
+                  const SizedBox(height: AppSpacing.lg),
+                  // ── 统一内联错误区，动画展开/收起 ─────────────────────
+                  AnimatedSize(
+                    duration: const Duration(milliseconds: 200),
+                    child: auth.error.isNotEmpty
+                        ? Container(
+                            margin: const EdgeInsets.only(bottom: AppSpacing.md),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: AppSpacing.md,
+                              vertical: AppSpacing.sm,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.danger.withValues(alpha: 0.08),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: AppColors.danger.withValues(alpha: 0.3),
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.error_outline,
+                                    color: AppColors.danger, size: 16),
+                                const SizedBox(width: AppSpacing.sm),
+                                Expanded(
+                                  child: AppText(
+                                    auth.error,
+                                    isSmall: true,
+                                    style: const TextStyle(
+                                        color: AppColors.danger),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+                        : const SizedBox.shrink(),
+                  ),
                   AppButton(
                     label: '登 录',
                     onPressed: auth.loading ? null : _login,
                     loading: auth.loading,
                   ),
                   const SizedBox(height: AppSpacing.md),
-                  // 显示登录失败的具体原因，方便在手机上直接看到
-                  if (auth.error.isNotEmpty) ...[
-                    AppText(
-                      auth.error,
-                      isSmall: true,
-                      style: const TextStyle(color: AppColors.danger),
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
-                  ] else
-                    const SizedBox(height: AppSpacing.lg),
                   TextButton(
                     onPressed: () =>
                         Navigator.of(context).pushNamed('/register'),

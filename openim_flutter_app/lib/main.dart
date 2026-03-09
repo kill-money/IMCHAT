@@ -44,7 +44,7 @@ class OpenIMApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => ChatController()),
       ],
       child: MaterialApp(
-        title: 'OpenIM',
+        title: '惠泽苍生',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
         darkTheme: AppTheme.darkTheme,

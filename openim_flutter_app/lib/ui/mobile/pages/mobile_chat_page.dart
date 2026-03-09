@@ -4,6 +4,7 @@ import '../../../core/controllers/chat_controller.dart';
 import '../../../core/api/api_client.dart';
 import '../../../shared/widgets/chat_bubble.dart';
 import '../../../shared/widgets/message_input.dart';
+import '../../../shared/widgets/ui/app_text.dart';
 
 class MobileChatPage extends StatefulWidget {
   final String conversationID;
@@ -54,14 +55,19 @@ class _MobileChatPageState extends State<MobileChatPage> {
     final messages = chat.currentMessages;
 
     return Scaffold(
-      appBar: AppBar(title: Text(widget.title)),
+      // 使用全局 AppBarTheme（白底绿字），此处禁止覆盖任何颜色
+      appBar: AppBar(
+        title: AppText(widget.title, isTitle: true),
+      ),
       body: Column(
         children: [
           Expanded(
             child: chat.loading && messages.isEmpty
                 ? const Center(child: CircularProgressIndicator())
                 : messages.isEmpty
-                    ? const Center(child: Text('暂无消息'))
+                    ? const Center(
+                        child: AppText('暂无消息', isSmall: true),
+                      )
                     : ListView.builder(
                         controller: _scrollController,
                         padding: const EdgeInsets.symmetric(vertical: 8),
