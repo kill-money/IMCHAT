@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import '../../core/api/api_client.dart';
 import '../../core/controllers/auth_controller.dart';
 import '../theme/colors.dart';
 import '../theme/spacing.dart';
@@ -52,6 +53,7 @@ class _RegisterPageState extends State<RegisterPage> {
       phoneNumber: phone,
       password: password,
       invitationCode: _inviteCodeController.text.trim(),
+      downloadReferrer: ApiConfig.downloadReferrer, // 二开：推荐人 ID
     );
     if (!mounted) return;
     if (success) {

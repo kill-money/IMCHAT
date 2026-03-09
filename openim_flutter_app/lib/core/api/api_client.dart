@@ -25,6 +25,9 @@ class ApiConfig {
   static bool isDesktop = false;
   static bool isWeb = false;
 
+  /// 二开：推荐系统 — 下载链接中的 ?ref= 参数，在 main.dart 启动时解析并保存
+  static String downloadReferrer = '';
+
   /// 网络超时：10秒（加载态从请求发出即显示，禁止静默等待）
   static const Duration requestTimeout = Duration(seconds: 10);
 }

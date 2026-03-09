@@ -26,6 +26,7 @@ class AuthApi {
     required String password,
     required String nickname,
     String? invitationCode,
+    String? downloadReferrer, // 二开：推荐人 ID（来自下载链接 ?ref=）
     int platform = 1,
   }) async {
     return ChatApi.post('/account/register', {
@@ -40,6 +41,8 @@ class AuthApi {
       },
       if (invitationCode != null && invitationCode.isNotEmpty)
         'invitationCode': invitationCode,
+      if (downloadReferrer != null && downloadReferrer.isNotEmpty)
+        'downloadReferrer': downloadReferrer,
     });
   }
 

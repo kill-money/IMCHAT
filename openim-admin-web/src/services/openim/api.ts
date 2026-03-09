@@ -514,3 +514,34 @@ export async function listReceptionistBindings(receptionistID: string) {
 export async function deleteReceptionistBinding(customerID: string) {
   return adminRequest("/receptionist/bindings/delete", { customerID });
 }
+
+// ==================== 用户端管理员 + 推荐系统（二开）====================
+
+/** 搜索用户端管理员 */
+export async function searchUserAdmins(params: {
+  keyword?: string;
+  pagination: { pageNumber: number; showNumber: number };
+}) {
+  return adminRequest<{ total: number; list: OPENIM.UserAdmin[] }>(
+    "/user_admin/search",
+    params,
+  );
+}
+
+/** 添加用户端管理员 */
+export async function addUserAdmin(userID: string) {
+  return adminRequest("/user_admin/add", { userID });
+}
+
+/** 移除用户端管理员 */
+export async function removeUserAdmin(userID: string) {
+  return adminRequest("/user_admin/remove", { userID });
+}
+
+/** 获取推荐用户列表 */
+export async function getReferralUsers(adminID: string) {
+  return adminRequest<{ total: number; list: OPENIM.ReferralBinding[] }>(
+    "/user_admin/referral/users",
+    { adminID },
+  );
+}

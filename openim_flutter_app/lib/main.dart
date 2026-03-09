@@ -24,6 +24,12 @@ void main() async {
   ApiConfig.isDesktop = !kIsWeb &&
       (Platform.isWindows || Platform.isMacOS || Platform.isLinux);
 
+  // 二开：推荐系统 — 从 Web URL 中解析 ?ref= 参数
+  if (kIsWeb) {
+    final ref = Uri.base.queryParameters['ref'] ?? '';
+    if (ref.isNotEmpty) ApiConfig.downloadReferrer = ref;
+  }
+
   // Desktop window config (1100x700, minimize 800x600)
   if (ApiConfig.isDesktop) {
     await initDesktopWindow();

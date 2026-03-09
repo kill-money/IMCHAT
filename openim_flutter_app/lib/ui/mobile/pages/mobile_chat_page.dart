@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../../core/controllers/auth_controller.dart';
 import '../../../core/controllers/chat_controller.dart';
 import '../../../core/api/api_client.dart';
 import '../../../shared/widgets/chat_bubble.dart';
+import '../../../shared/widgets/conversation_ip_badge.dart';
 import '../../../shared/widgets/message_input.dart';
 import '../../../shared/widgets/ui/app_text.dart';
 
@@ -57,7 +59,20 @@ class _MobileChatPageState extends State<MobileChatPage> {
     return Scaffold(
       // 使用全局 AppBarTheme（白底绿字），此处禁止覆盖任何颜色
       appBar: AppBar(
-        title: AppText(widget.title, isTitle: true),
+        title: Builder(builder: (context) {
+          final auth = context.watch<AuthController>();
+          final canViewIP = auth.currentUser?.canViewIP ?? false;
+          if (canViewIP && widget.recvID.isNotEmpty) {
+            return Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                AppText(widget.title, isTitle: true),
+                ConversationIPBadge(partnerUserID: widget.recvID),
+              ],
+            );
+          }
+          return AppText(widget.title, isTitle: true);
+        }),
       ),
       body: Column(
         children: [

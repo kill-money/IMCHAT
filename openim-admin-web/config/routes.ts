@@ -88,6 +88,11 @@ export default [
         name: "IP封禁",
         component: "./system/ip-forbidden",
       },
+      {
+        path: "/system/user-admin",
+        name: "用户端管理员",
+        component: "./system/user-admin",
+      },
     ],
   },
   {

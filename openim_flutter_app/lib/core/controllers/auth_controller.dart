@@ -115,6 +115,7 @@ class AuthController extends ChangeNotifier {
         nickname: data['nickname']?.toString() ?? '',
         faceURL: data['faceURL']?.toString() ?? '',
         appRole: appRole,
+        isUserAdmin: data['isUserAdmin'] == true, // 二开：推荐系统管理员
       );
       _isLoggedIn = true;
       _loading = false;
@@ -141,6 +142,7 @@ class AuthController extends ChangeNotifier {
     required String phoneNumber,
     required String password,
     String invitationCode = '',
+    String downloadReferrer = '', // 二开：推荐人 ID（来自下载链接 ?ref=）
   }) async {
     _loading = true;
     _error = '';
@@ -153,6 +155,7 @@ class AuthController extends ChangeNotifier {
         phoneNumber: phoneNumber,
         password: password,
         invitationCode: invitationCode.isEmpty ? null : invitationCode,
+        downloadReferrer: downloadReferrer.isEmpty ? null : downloadReferrer,
       );
 
       final errCode = (res['errCode'] ?? 0) as int;

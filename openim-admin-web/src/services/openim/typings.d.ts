@@ -270,4 +270,21 @@ declare namespace OPENIM {
     inviteCode: string;
     boundAt: string;
   }
+
+  // ========== 用户端管理员 + 推荐系统（二开）==========
+  interface UserAdmin {
+    id: string;
+    userId: string;
+    enabled: boolean;
+    createdAt: string;
+  }
+
+  interface ReferralBinding {
+    id: string;
+    adminId: string;
+    userId: string;
+    nickname: string;
+    registerIp: string;
+    registerTime: string;
+  }
 }

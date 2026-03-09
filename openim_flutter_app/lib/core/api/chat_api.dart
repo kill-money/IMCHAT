@@ -65,6 +65,13 @@ class UserApi {
       'userInfo': userInfo,
     });
   }
+
+  /// 二开：查询指定用户最近登录 IP（需管理员或用户端管理员 token）
+  static Future<Map<String, dynamic>> getUserIPInfo({
+    required String userID,
+  }) {
+    return ChatApi.post('/user/ip_info', {'userID': userID});
+  }
 }
 
 class FriendApi {
