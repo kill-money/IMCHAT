@@ -1,0 +1,35 @@
+{
+  "app_name": "惠泽苍生",
+  "version": "v1.0.0",
+  "assets": {
+    "splash_launch": {
+      "description": "应用启动页全屏背景图",
+      "source": "photo_2026-03-09_02-42-52.jpg",
+      "design_version": "v1.0.0",
+      "platforms": {
+        "android": {
+          "flutter_asset": "assets/images/mobile/android/android_splash_launch_xxhdpi_v1.0.0.jpg",
+          "native_drawable": "android/app/src/main/res/drawable/android_splash_launch_v1_0_0.jpg",
+          "resource_id": "@drawable/android_splash_launch_v1_0_0",
+          "fit": "fill",
+          "note": "原生冷启动 + Flutter 应用内启动页双重覆盖"
+        },
+        "ios": {
+          "flutter_asset": "assets/images/mobile/ios/ios_splash_launch_@3x_v1.0.0.jpg",
+          "native_xcassets": "ios/Runner/Assets.xcassets/LaunchImage.imageset/ios_splash_launch_@3x_v1.0.0.jpg",
+          "resource_id": "LaunchImage",
+          "fit": "scaleAspectFill",
+          "note": "LaunchScreen.storyboard 全屏铺满 + Flutter 应用内启动页"
+        },
+        "windows": {
+          "flutter_asset": "assets/images/desktop/win_splash_launch_1920_v1.0.0.jpg",
+          "note": "桌面端不显示启动图，直接进入登录页"
+        },
+        "web": {
+          "flutter_asset": "assets/images/web/web_splash_launch_desktop_v1.0.0.jpg",
+          "note": "Web端不显示启动图，直接进入登录页"
+        }
+      }
+    }
+  }
+}

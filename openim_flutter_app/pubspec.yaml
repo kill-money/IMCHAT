@@ -61,7 +61,11 @@ flutter:
   uses-material-design: true
 
   assets:
-    - assets/images/splash.jpg
+    - assets/images/mobile/android/
+    - assets/images/mobile/ios/
+    - assets/images/desktop/
+    - assets/images/web/
+    - assets/config/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
