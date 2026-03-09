@@ -11,7 +11,6 @@ import 'core/controllers/chat_controller.dart';
 import 'shared/theme/app_theme.dart';
 import 'shared/pages/login_page.dart';
 import 'shared/pages/register_page.dart';
-import 'shared/pages/splash_page.dart';
 import 'ui/mobile/mobile_layout.dart';
 import 'ui/desktop/desktop_layout.dart';
 import 'ui/web/web_layout.dart';
@@ -59,9 +58,8 @@ class OpenIMApp extends StatelessWidget {
             child: child ?? const SizedBox.shrink(),
           );
         },
-        initialRoute: '/splash',
+        initialRoute: '/login',
         routes: {
-          '/splash': (_) => const SplashPage(),
           '/login': (_) => const LoginPage(),
           '/register': (_) => const RegisterPage(),
           '/home': (_) => _buildHomeLayout(),
