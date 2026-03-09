@@ -55,7 +55,11 @@ class _RegisterPageState extends State<RegisterPage> {
     );
     if (!mounted) return;
     if (success) {
-      AppFeedback.success(context, '注册成功，请登录');
+      final receptionistID = auth.lastReceptionistID;
+      final msg = receptionistID.isNotEmpty
+          ? '注册成功，已绑定您的专属接待员'
+          : '注册成功，请登录';
+      AppFeedback.success(context, msg);
       Navigator.of(context).pop();
     }
     // 失败时 auth.error 已更新，inline 区域自动展示

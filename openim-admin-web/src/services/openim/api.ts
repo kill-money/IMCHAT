@@ -478,3 +478,39 @@ export async function batchCreateUsers(data: {
 }) {
   return adminRequest<OPENIM.BatchCreateResult>("/user/batch_create", data);
 }
+
+// ==================== 接待员管理（二开）====================
+
+/** 搜索接待员邀请码 */
+export async function searchReceptionistInviteCodes(params: {
+  keyword?: string;
+  pagination: { pageNumber: number; showNumber: number };
+}) {
+  return adminRequest<{ total: number; list: OPENIM.ReceptionistInviteCode[] }>(
+    "/receptionist/invite_codes/search",
+    params,
+  );
+}
+
+/** 更新邀请码状态（启用/禁用） */
+export async function updateReceptionistInviteCodeStatus(id: string, status: number) {
+  return adminRequest("/receptionist/invite_codes/update_status", { id, status });
+}
+
+/** 删除邀请码 */
+export async function deleteReceptionistInviteCode(id: string) {
+  return adminRequest("/receptionist/invite_codes/delete", { id });
+}
+
+/** 查询接待员的客户列表 */
+export async function listReceptionistBindings(receptionistID: string) {
+  return adminRequest<{ total: number; list: OPENIM.CustomerBinding[] }>(
+    "/receptionist/bindings/list",
+    { receptionistID },
+  );
+}
+
+/** 删除绑定关系 */
+export async function deleteReceptionistBinding(customerID: string) {
+  return adminRequest("/receptionist/bindings/delete", { customerID });
+}

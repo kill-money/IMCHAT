@@ -10,11 +10,13 @@ class AuthController extends ChangeNotifier {
   bool _isLoggedIn = false;
   bool _loading = false;
   String _error = '';
+  String _lastReceptionistID = ''; // 二开：注册时绑定的接待员 userID
 
   UserInfo? get currentUser => _currentUser;
   bool get isLoggedIn => _isLoggedIn;
   bool get loading => _loading;
   String get error => _error;
+  String get lastReceptionistID => _lastReceptionistID;
 
   /// 将服务端错误码转化为用户可理解文案，禁止直接暴露技术术语
   /// 错误码来源：openim-chat/pkg/eerrs/predefine.go
@@ -160,6 +162,10 @@ class AuthController extends ChangeNotifier {
         notifyListeners();
         return false;
       }
+
+      // 二开：接待员绑定 — 注册成功后记录绑定的接待员 userID（如有）
+      final data = res['data'] ?? {};
+      _lastReceptionistID = data['receptionistID']?.toString() ?? '';
 
       _loading = false;
       notifyListeners();

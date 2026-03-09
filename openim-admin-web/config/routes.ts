@@ -100,6 +100,11 @@ export default [
         name: "登录白名单",
         component: "./security/whitelist",
       },
+      {
+        path: "/security/receptionist",
+        name: "接待员管理",
+        component: "./security/receptionist",
+      },
     ],
   },
   {

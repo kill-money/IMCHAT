@@ -252,4 +252,22 @@ declare namespace OPENIM {
     skipped: number;
     usernames: string[];
   }
+
+  // ========== 接待员管理（二开）==========
+  interface ReceptionistInviteCode {
+    id: string;
+    userId: string;
+    inviteCode: string;
+    createdAt: string;
+    status: number; // 1=enabled 0=disabled
+    customerCount?: number;
+  }
+
+  interface CustomerBinding {
+    id: string;
+    customerId: string;
+    receptionistId: string;
+    inviteCode: string;
+    boundAt: string;
+  }
 }
