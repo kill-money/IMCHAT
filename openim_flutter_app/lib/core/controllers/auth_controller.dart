@@ -17,24 +17,47 @@ class AuthController extends ChangeNotifier {
   String get error => _error;
 
   /// 将服务端错误码转化为用户可理解文案，禁止直接暴露技术术语
+  /// 错误码来源：openim-chat/pkg/eerrs/predefine.go
   static String _mapError(int code, String serverMsg) {
     switch (code) {
-      case 1001:
+      // ── openim-chat 业务错误码（20xxx）──────────────────────────────
+      case 20001:
         return '手机号或密码错误，请重新输入';
-      case 1002:
-        return '验证码错误或已过期';
-      case 1003:
+      case 20002:
         return '该账号不存在，请先注册';
-      case 1004:
+      case 20003:
         return '该手机号已注册，请直接登录';
-      case 1005:
+      case 20004:
+        return '该账号已注册，请直接登录';
+      case 20005:
+        return '验证码发送过于频繁，请稍后再试';
+      case 20006:
+        return '验证码错误，请重新输入';
+      case 20007:
+        return '验证码已过期，请重新获取';
+      case 20008:
+        return '验证码尝试次数过多，请重新获取';
+      case 20009:
+        return '验证码已使用，请重新获取';
+      case 20010:
+        return '邀请码已被使用，请更换后重试';
+      case 20011:
         return '邀请码无效，请确认后重试';
+      case 20012:
+        return '账号已被禁止访问，请联系客服';
+      case 20013:
+        return '对方拒绝了好友申请';
+      case 20014:
+        return '该邮箱已注册，请直接登录';
+      case 20101:
+        return '登录状态已失效，请重新登录';
+      // ── open-im-server 通用错误码 ────────────────────────────────────
       case 10001:
         return '输入信息有误，请检查后重试';
       case 10002:
         return '服务暂时不可用，请稍后重试';
       default:
-        return serverMsg.isNotEmpty ? serverMsg : '操作失败，请稍后重试';
+        return '操作失败，请稍后重试';
     }
   }
 
