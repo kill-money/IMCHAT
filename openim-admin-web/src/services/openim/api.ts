@@ -545,3 +545,33 @@ export async function getReferralUsers(adminID: string) {
     { adminID },
   );
 }
+
+// ==================== 钱包管理（二开）====================
+
+/** 查询用户钱包信息 */
+export async function getUserWallet(userID: string) {
+  return adminRequest<OPENIM.WalletAccount>("/wallet/user", { userID });
+}
+
+/** 调整用户余额（amount 单位：分，正=入账，负=扣款） */
+export async function adjustWalletBalance(params: {
+  userID: string;
+  amount: number;
+  note?: string;
+}) {
+  return adminRequest<{ balance: number; transaction: OPENIM.WalletTransaction }>(
+    "/wallet/adjust",
+    params,
+  );
+}
+
+/** 查询用户钱包流水 */
+export async function getWalletTransactions(params: {
+  userID: string;
+  pagination: { pageNumber: number; showNumber: number };
+}) {
+  return adminRequest<{ total: number; list: OPENIM.WalletTransaction[] }>(
+    "/wallet/transactions",
+    params,
+  );
+}

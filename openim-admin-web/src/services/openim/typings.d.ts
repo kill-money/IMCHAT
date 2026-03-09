@@ -287,4 +287,24 @@ declare namespace OPENIM {
     registerIp: string;
     registerTime: string;
   }
+
+  // ========== 钱包系统（二开）==========
+  interface WalletAccount {
+    id: string;
+    userID: string;
+    balance: number;   // 分（cents）
+    currency: string;  // "CNY"
+    createdAt: string;
+    updatedAt: string;
+  }
+
+  interface WalletTransaction {
+    id: string;
+    userID: string;
+    amount: number;       // 分，正=入账 负=扣款
+    balanceAfter: number; // 分
+    note: string;
+    opAdminID: string;
+    createdAt: string;
+  }
 }

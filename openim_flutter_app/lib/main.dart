@@ -9,6 +9,7 @@ import 'core/desktop_window.dart';
 import 'core/controllers/auth_controller.dart';
 import 'core/controllers/conversation_controller.dart';
 import 'core/controllers/chat_controller.dart';
+import 'core/controllers/wallet_controller.dart';
 import 'shared/theme/app_theme.dart';
 import 'shared/pages/splash_page.dart';
 import 'shared/pages/auth_page.dart';
@@ -48,6 +49,7 @@ class OpenIMApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AuthController()),
         ChangeNotifierProvider(create: (_) => ConversationController()),
         ChangeNotifierProvider(create: (_) => ChatController()),
+        ChangeNotifierProvider(create: (_) => WalletController()), // 二开：钱包系统
       ],
       child: MaterialApp(
         title: '惠泽苍生',

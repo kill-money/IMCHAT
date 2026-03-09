@@ -9,6 +9,7 @@ import '../../../shared/widgets/ui/app_button.dart';
 import '../../../shared/widgets/ui/app_card.dart';
 import '../../../shared/widgets/ui/app_header.dart';
 import '../../../shared/widgets/ui/app_text.dart';
+import 'mobile_wallet_page.dart';
 
 class MobileProfilePage extends StatefulWidget {
   const MobileProfilePage({super.key});
@@ -109,6 +110,11 @@ class _MobileProfilePageState extends State<MobileProfilePage> {
             ),
           ),
           const SizedBox(height: AppSpacing.lg),
+          _buildItem(Icons.account_balance_wallet_outlined, '钱包', () {
+            Navigator.of(context).push(MaterialPageRoute(
+              builder: (_) => const MobileWalletPage(),
+            ));
+          }),
           _buildItem(Icons.settings, '设置', () {}),
           _buildItem(Icons.info_outline, '关于', () {}),
           const SizedBox(height: AppSpacing.xl),

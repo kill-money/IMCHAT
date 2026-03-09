@@ -93,6 +93,11 @@ export default [
         name: "用户端管理员",
         component: "./system/user-admin",
       },
+      {
+        path: "/system/wallet",
+        name: "资金管理",
+        component: "./system/wallet",
+      },
     ],
   },
   {
