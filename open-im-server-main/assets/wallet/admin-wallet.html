@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>钱包管理 - OpenIM Admin</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f0f2f5;color:#333}
+.header{background:#1890ff;color:#fff;padding:16px 24px;display:flex;align-items:center;justify-content:space-between}
+.header h1{font-size:20px}
+.header a{color:#fff;text-decoration:none;opacity:.8}
+.header a:hover{opacity:1}
+.container{max-width:1200px;margin:20px auto;padding:0 16px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:20px}
+.stat-card{background:#fff;border-radius:8px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+.stat-card .label{font-size:13px;color:#999;margin-bottom:8px}
+.stat-card .value{font-size:28px;font-weight:700;color:#1890ff}
+.stat-card .value.warn{color:#faad14}
+.stat-card .value.danger{color:#ff4d4f}
+.card{background:#fff;border-radius:8px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,.1);margin-bottom:20px}
+.card-title{font-size:16px;font-weight:600;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid #f0f0f0}
+table{width:100%;border-collapse:collapse}
+th,td{padding:10px 12px;text-align:left;border-bottom:1px solid #f0f0f0;font-size:14px}
+th{background:#fafafa;font-weight:600;color:#666}
+tr:hover{background:#f5f5f5}
+.btn{padding:6px 16px;border:none;border-radius:4px;cursor:pointer;font-size:13px;transition:opacity .2s}
+.btn:hover{opacity:.85}
+.btn-primary{background:#1890ff;color:#fff}
+.btn-success{background:#52c41a;color:#fff}
+.btn-warning{background:#faad14;color:#fff}
+.btn-danger{background:#ff4d4f;color:#fff}
+.btn-sm{padding:4px 10px;font-size:12px}
+.actions{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.amount{font-family:'Courier New',monospace;font-weight:600}
+.amount.positive{color:#52c41a}
+.amount.negative{color:#ff4d4f}
+.status-badge{padding:2px 8px;border-radius:10px;font-size:12px}
+.status-normal{background:#e6f7ff;color:#1890ff}
+.status-frozen{background:#fff1f0;color:#ff4d4f}
+.modal-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.45);z-index:1000;align-items:center;justify-content:center}
+.modal-overlay.active{display:flex}
+.modal{background:#fff;border-radius:8px;padding:24px;width:420px;max-width:90vw}
+.modal h3{margin-bottom:16px}
+.modal .form-group{margin-bottom:12px}
+.modal label{display:block;font-size:13px;color:#666;margin-bottom:4px}
+.modal input,.modal select,.modal textarea{width:100%;padding:8px 12px;border:1px solid #d9d9d9;border-radius:4px;font-size:14px}
+.modal textarea{resize:vertical;min-height:60px}
+.modal .btn-row{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
+.toast{position:fixed;top:20px;right:20px;padding:12px 20px;border-radius:6px;color:#fff;font-size:14px;z-index:2000;transition:opacity .3s}
+.toast.success{background:#52c41a}
+.toast.error{background:#ff4d4f}
+.empty{text-align:center;padding:40px;color:#999}
+.pagination{display:flex;justify-content:center;gap:8px;margin-top:16px}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>钱包管理</h1>
+  <a href="/">&larr; 返回管理后台</a>
+</div>
+
+<div class="container">
+  <!-- 概览统计 -->
+  <div class="stats" id="statsArea">
+    <div class="stat-card"><div class="label">总账户数</div><div class="value" id="totalAccounts">-</div></div>
+    <div class="stat-card"><div class="label">冻结账户</div><div class="value warn" id="frozenAccounts">-</div></div>
+    <div class="stat-card"><div class="label">总余额 (分)</div><div class="value" id="totalBalance">-</div></div>
+    <div class="stat-card"><div class="label">总冻结金额 (分)</div><div class="value danger" id="totalFrozen">-</div></div>
+  </div>
+
+  <!-- 账户列表 -->
+  <div class="card">
+    <div class="card-title">账户列表</div>
+    <div class="actions">
+      <button class="btn btn-primary" onclick="loadAccounts()">刷新</button>
+    </div>
+    <table>
+      <thead><tr><th>用户ID</th><th>余额 (分)</th><th>冻结金额</th><th>币种</th><th>状态</th><th>创建时间</th><th>操作</th></tr></thead>
+      <tbody id="accountTableBody"><tr><td colspan="7" class="empty">加载中...</td></tr></tbody>
+    </table>
+    <div class="pagination" id="accountPagination"></div>
+  </div>
+
+  <!-- 审计日志 -->
+  <div class="card">
+    <div class="card-title">审计日志</div>
+    <div class="actions">
+      <button class="btn btn-primary" onclick="loadAuditLogs()">刷新</button>
+    </div>
+    <table>
+      <thead><tr><th>时间</th><th>用户ID</th><th>操作</th><th>详情</th><th>操作人</th></tr></thead>
+      <tbody id="auditTableBody"><tr><td colspan="5" class="empty">加载中...</td></tr></tbody>
+    </table>
+    <div class="pagination" id="auditPagination"></div>
+  </div>
+</div>
+
+<!-- 调账弹窗 -->
+<div class="modal-overlay" id="adjustModal">
+  <div class="modal">
+    <h3>调整余额</h3>
+    <div class="form-group"><label>用户ID</label><input id="adj_userID" readonly></div>
+    <div class="form-group"><label>操作类型</label><select id="adj_isAdd"><option value="true">加款</option><option value="false">扣款</option></select></div>
+    <div class="form-group"><label>金额 (分)</label><input id="adj_amount" type="number" min="1" placeholder="输入金额"></div>
+    <div class="form-group"><label>备注</label><textarea id="adj_remark" placeholder="必填"></textarea></div>
+    <div class="btn-row">
+      <button class="btn" onclick="closeModal('adjustModal')">取消</button>
+      <button class="btn btn-primary" onclick="submitAdjust()">确认</button>
+    </div>
+  </div>
+</div>
+
+<!-- 冻结/解冻账户弹窗 -->
+<div class="modal-overlay" id="freezeModal">
+  <div class="modal">
+    <h3 id="freezeModalTitle">冻结账户</h3>
+    <div class="form-group"><label>用户ID</label><input id="frz_userID" readonly></div>
+    <div class="form-group"><label>原因</label><textarea id="frz_reason" placeholder="输入原因"></textarea></div>
+    <input type="hidden" id="frz_action">
+    <div class="btn-row">
+      <button class="btn" onclick="closeModal('freezeModal')">取消</button>
+      <button class="btn btn-danger" onclick="submitFreeze()">确认</button>
+    </div>
+  </div>
+</div>
+
+<div id="toastArea"></div>
+
+<script>
+const API_BASE = 'http://127.0.0.1:10002';
+const ADMIN_API_BASE = 'http://127.0.0.1:10009';
+
+// Token: read from localStorage (set by admin-front login), or prompt
+let adminToken = localStorage.getItem('IMAdminToken') || '';
+// Also try the key used by admin-front
+if (!adminToken) {
+  try {
+    const infoStr = localStorage.getItem('IMAdminInfo');
+    if (infoStr) { adminToken = JSON.parse(infoStr).adminToken || ''; }
+  } catch(e) {}
+}
+if (!adminToken) {
+  adminToken = prompt('请输入管理员Token (从管理后台登录后获取)', '');
+  if (adminToken) localStorage.setItem('IMAdminToken', adminToken);
+}
+
+async function apiCall(path, body) {
+  const resp = await fetch(API_BASE + path, {
+    method: 'POST',
+    headers: {'Content-Type':'application/json','token': adminToken,'operationID': crypto.randomUUID()},
+    body: JSON.stringify(body || {})
+  });
+  const data = await resp.json();
+  if (data.errCode && data.errCode !== 0) throw new Error(data.errMsg || 'API error ' + data.errCode);
+  return data.data || data;
+}
+
+function toast(msg, type='success') {
+  const el = document.createElement('div');
+  el.className = 'toast ' + type;
+  el.textContent = msg;
+  document.getElementById('toastArea').appendChild(el);
+  setTimeout(() => el.remove(), 3000);
+}
+
+function fmtTime(ms) {
+  if (!ms) return '-';
+  return new Date(ms).toLocaleString('zh-CN');
+}
+
+function fmtAmount(v) {
+  const yuan = (v / 100).toFixed(2);
+  return v >= 0 ? yuan : yuan;
+}
+
+function statusBadge(s) {
+  if (s === 1) return '<span class="status-badge status-frozen">冻结</span>';
+  return '<span class="status-badge status-normal">正常</span>';
+}
+
+// ===== Overview =====
+async function loadOverview() {
+  try {
+    const d = await apiCall('/wallet/admin/get_overview', {});
+    document.getElementById('totalAccounts').textContent = d.totalAccounts || 0;
+    document.getElementById('frozenAccounts').textContent = d.frozenAccounts || 0;
+    document.getElementById('totalBalance').textContent = (d.totalBalance || 0).toLocaleString();
+    document.getElementById('totalFrozen').textContent = (d.totalFrozen || 0).toLocaleString();
+  } catch(e) {
+    console.error('loadOverview', e);
+  }
+}
+
+// ===== Accounts =====
+let accountPage = 1;
+async function loadAccounts(page) {
+  if (page) accountPage = page;
+  try {
+    const d = await apiCall('/wallet/admin/get_account_list', {pagination:{pageNumber: accountPage, showNumber: 20}});
+    const tbody = document.getElementById('accountTableBody');
+    if (!d.accounts || d.accounts.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="7" class="empty">暂无数据</td></tr>';
+      return;
+    }
+    tbody.innerHTML = d.accounts.map(a => `<tr>
+      <td>${esc(a.userID)}</td>
+      <td class="amount">${fmtAmount(a.balance)}</td>
+      <td class="amount">${fmtAmount(a.frozenAmount)}</td>
+      <td>${esc(a.currency||'CNY')}</td>
+      <td>${statusBadge(a.status)}</td>
+      <td>${fmtTime(a.createTime)}</td>
+      <td>
+        <button class="btn btn-sm btn-primary" onclick="openAdjust('${esc(a.userID)}')">调账</button>
+        ${a.status !== 1
+          ? `<button class="btn btn-sm btn-danger" onclick="openFreeze('${esc(a.userID)}','freeze')">冻结</button>`
+          : `<button class="btn btn-sm btn-success" onclick="openFreeze('${esc(a.userID)}','unfreeze')">解冻</button>`
+        }
+      </td>
+    </tr>`).join('');
+    renderPagination('accountPagination', d.total, 20, accountPage, loadAccounts);
+  } catch(e) {
+    toast('加载账户失败: ' + e.message, 'error');
+  }
+}
+
+// ===== Audit Logs =====
+let auditPage = 1;
+async function loadAuditLogs(page) {
+  if (page) auditPage = page;
+  try {
+    const d = await apiCall('/wallet/admin/get_audit_logs', {pagination:{pageNumber: auditPage, showNumber: 20}});
+    const tbody = document.getElementById('auditTableBody');
+    if (!d.logs || d.logs.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="5" class="empty">暂无审计日志</td></tr>';
+      return;
+    }
+    tbody.innerHTML = d.logs.map(l => `<tr>
+      <td>${fmtTime(l.createTime)}</td>
+      <td>${esc(l.userID)}</td>
+      <td>${esc(l.action)}</td>
+      <td>${esc(l.detail)}</td>
+      <td>${esc(l.operatorUserID)}</td>
+    </tr>`).join('');
+    renderPagination('auditPagination', d.total, 20, auditPage, loadAuditLogs);
+  } catch(e) {
+    toast('加载审计日志失败: ' + e.message, 'error');
+  }
+}
+
+// ===== Modals =====
+function openAdjust(userID) {
+  document.getElementById('adj_userID').value = userID;
+  document.getElementById('adj_amount').value = '';
+  document.getElementById('adj_remark').value = '';
+  document.getElementById('adjustModal').classList.add('active');
+}
+
+async function submitAdjust() {
+  const userID = document.getElementById('adj_userID').value;
+  const amount = parseInt(document.getElementById('adj_amount').value);
+  const isAdd = document.getElementById('adj_isAdd').value === 'true';
+  const remark = document.getElementById('adj_remark').value;
+  if (!amount || amount <= 0) return toast('请输入有效金额', 'error');
+  if (!remark) return toast('请输入备注', 'error');
+  try {
+    await apiCall('/wallet/admin/adjust_balance', {userID, amount, isAdd, remark});
+    toast((isAdd ? '加款' : '扣款') + '成功');
+    closeModal('adjustModal');
+    loadAccounts(); loadOverview(); loadAuditLogs();
+  } catch(e) {
+    toast('调账失败: ' + e.message, 'error');
+  }
+}
+
+function openFreeze(userID, action) {
+  document.getElementById('frz_userID').value = userID;
+  document.getElementById('frz_reason').value = '';
+  document.getElementById('frz_action').value = action;
+  document.getElementById('freezeModalTitle').textContent = action === 'freeze' ? '冻结账户' : '解冻账户';
+  document.getElementById('freezeModal').classList.add('active');
+}
+
+async function submitFreeze() {
+  const userID = document.getElementById('frz_userID').value;
+  const reason = document.getElementById('frz_reason').value;
+  const action = document.getElementById('frz_action').value;
+  const path = action === 'freeze' ? '/wallet/admin/freeze_account' : '/wallet/admin/unfreeze_account';
+  try {
+    await apiCall(path, {userID, reason});
+    toast((action === 'freeze' ? '冻结' : '解冻') + '成功');
+    closeModal('freezeModal');
+    loadAccounts(); loadOverview();
+  } catch(e) {
+    toast('操作失败: ' + e.message, 'error');
+  }
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('active');
+}
+
+// ===== Pagination =====
+function renderPagination(elId, total, pageSize, current, callback) {
+  const pages = Math.ceil(total / pageSize);
+  if (pages <= 1) { document.getElementById(elId).innerHTML = ''; return; }
+  let html = '';
+  for (let i = 1; i <= pages && i <= 10; i++) {
+    html += `<button class="btn btn-sm ${i===current?'btn-primary':''}" onclick="${callback.name}(${i})">${i}</button>`;
+  }
+  document.getElementById(elId).innerHTML = html;
+}
+
+function esc(s) {
+  if (!s) return '';
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+// ===== Init =====
+loadOverview();
+loadAccounts();
+loadAuditLogs();
+</script>
+</body>
+</html>

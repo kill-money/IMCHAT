@@ -1,0 +1,373 @@
+### ============================================
+### OpenIM Server API 测试
+### 使用方式: 点击 "Send Request" 发送请求
+### 环境切换: Ctrl+Alt+E 选择 local / docker
+### ============================================
+
+### ----- 变量 -----
+@baseUrl = http://localhost:10002
+@adminToken = {{$dotenv adminToken}}
+@userToken = {{$dotenv userToken}}
+
+### ============================================
+### Auth - 获取管理员 Token
+### ============================================
+
+# @name getAdminToken
+POST {{baseUrl}}/auth/get_admin_token
+Content-Type: application/json
+operationID: {{$guid}}
+
+{
+  "secret": "openIM123",
+  "userID": "imAdmin"
+}
+
+### ============================================
+### Auth - 获取用户 Token
+### ============================================
+
+# @name getUserToken
+POST {{baseUrl}}/auth/get_user_token
+Content-Type: application/json
+operationID: {{$guid}}
+token: {{getAdminToken.response.body.$.data.token}}
+
+{
+  "userID": "testUser001",
+  "platformID": 1
+}
+
+### ============================================
+### Auth - 解析 Token
+### ============================================
+
+POST {{baseUrl}}/auth/parse_token
+Content-Type: application/json
+operationID: {{$guid}}
+token: {{getUserToken.response.body.$.data.token}}
+
+{}
+
+### ============================================
+### User - 注册用户
+### ============================================
+
+POST {{baseUrl}}/user/user_register
+Content-Type: application/json
+operationID: {{$guid}}
+token: {{getAdminToken.response.body.$.data.token}}
+
+{
+  "users": [
+    {
+      "userID": "testUser001",
+      "nickname": "测试用户1",
+      "faceURL": ""
+    }
+  ]
+}
+
+### ============================================
+### User - 获取用户信息
+### ============================================
+
+POST {{baseUrl}}/user/get_users_info
+Content-Type: application/json
+operationID: {{$guid}}
+token: {{getAdminToken.response.body.$.data.token}}
+
+{
+  "userIDs": ["testUser001"]
+}
+
+### ============================================
+### User - 获取所有用户
+### ============================================
+
+POST {{baseUrl}}/user/get_users
+Content-Type: application/json
+operationID: {{$guid}}
+token: {{getAdminToken.response.body.$.data.token}}
+
+{
+  "pagination": {
+    "pageNumber": 1,
+    "showNumber": 20
+  }
+}
+
+### ============================================
+### Friend - 发送好友申请
+### ============================================
+
+POST {{baseUrl}}/friend/add_friend
+Content-Type: application/json
+operationID: {{$guid}}
+token: {{getUserToken.response.body.$.data.token}}
+
+{
+  "fromUserID": "testUser001",
+  "toUserID": "testUser002",
+  "reqMsg": "你好，想加你为好友"
+}
+
+### ============================================
+### Group - 创建群组
+### ============================================
+
+POST {{baseUrl}}/group/create_group
+Content-Type: application/json
+operationID: {{$guid}}
+token: {{getUserToken.response.body.$.data.token}}
+
+{
+  "memberUserIDs": ["testUser001"],
+  "groupInfo": {
+    "groupName": "测试群组",
+    "groupType": 2,
+    "introduction": "这是一个测试群"
+  }
+}
+
+### ============================================
+### Msg - 发送单聊消息
+### ============================================
+
+POST {{baseUrl}}/msg/send_msg
+Content-Type: application/json
+operationID: {{$guid}}
+token: {{getUserToken.response.body.$.data.token}}
+
+{
+  "recvID": "testUser002",
+  "sendID": "testUser001",
+  "senderNickname": "测试用户1",
+  "content": {
+    "content": "Hello OpenIM!"
+  },
+  "contentType": 101,
+  "sessionType": 1
+}
+
+### ============================================
+### Msg - 获取最新序列号
+### ============================================
+
+### ============================================
+### Wallet - 用户端钱包接口
+### ============================================
+
+### 创建钱包账户
+POST {{baseUrl}}/wallet/create_account
+Content-Type: application/json
+operationID: {{$guid}}
+token: {{getUserToken.response.body.$.data.token}}
+
+{
+  "currency": "CNY"
+}
+
+### 查询余额
+POST {{baseUrl}}/wallet/get_balance
+Content-Type: application/json
+operationID: {{$guid}}
+token: {{getUserToken.response.body.$.data.token}}
+
+{}
+
+### 充值
+POST {{baseUrl}}/wallet/recharge
+Content-Type: application/json
+operationID: {{$guid}}
+token: {{getUserToken.response.body.$.data.token}}
+
+{
+  "amount": 100000,
+  "idempotencyKey": "RECHARGE_{{$guid}}",
+  "remark": "测试充值1000元"
+}
+
+### 提现
+POST {{baseUrl}}/wallet/withdraw
+Content-Type: application/json
+operationID: {{$guid}}
+token: {{getUserToken.response.body.$.data.token}}
+
+{
+  "amount": 10000,
+  "idempotencyKey": "WITHDRAW_{{$guid}}",
+  "remark": "测试提现100元"
+}
+
+### 转账
+POST {{baseUrl}}/wallet/transfer
+Content-Type: application/json
+operationID: {{$guid}}
+token: {{getUserToken.response.body.$.data.token}}
+
+{
+  "toUserID": "testUser002",
+  "amount": 5000,
+  "idempotencyKey": "TRANSFER_{{$guid}}",
+  "remark": "测试转账50元"
+}
+
+### 查询交易记录
+POST {{baseUrl}}/wallet/get_transactions
+Content-Type: application/json
+operationID: {{$guid}}
+token: {{getUserToken.response.body.$.data.token}}
+
+{
+  "types": [],
+  "pageNumber": 1,
+  "showNumber": 20
+}
+
+### ============================================
+### Wallet Admin - 管理端钱包接口
+### ============================================
+
+### 资金总览
+POST {{baseUrl}}/wallet/admin/get_overview
+Content-Type: application/json
+operationID: {{$guid}}
+token: {{getAdminToken.response.body.$.data.token}}
+
+{}
+
+### 账户列表
+POST {{baseUrl}}/wallet/admin/get_account_list
+Content-Type: application/json
+operationID: {{$guid}}
+token: {{getAdminToken.response.body.$.data.token}}
+
+{
+  "statusFilter": [],
+  "pageNumber": 1,
+  "showNumber": 20
+}
+
+### 管理员调增余额
+POST {{baseUrl}}/wallet/admin/adjust_balance
+Content-Type: application/json
+operationID: {{$guid}}
+token: {{getAdminToken.response.body.$.data.token}}
+
+{
+  "userID": "testUser001",
+  "amount": 50000,
+  "isAdd": true,
+  "remark": "管理员调增500元-活动奖励"
+}
+
+### 冻结账户
+POST {{baseUrl}}/wallet/admin/freeze_account
+Content-Type: application/json
+operationID: {{$guid}}
+token: {{getAdminToken.response.body.$.data.token}}
+
+{
+  "userID": "testUser001",
+  "reason": "涉嫌违规操作"
+}
+
+### 解冻账户
+POST {{baseUrl}}/wallet/admin/unfreeze_account
+Content-Type: application/json
+operationID: {{$guid}}
+token: {{getAdminToken.response.body.$.data.token}}
+
+{
+  "userID": "testUser001",
+  "reason": "审核通过解除冻结"
+}
+
+### 冻结金额
+POST {{baseUrl}}/wallet/admin/freeze_amount
+Content-Type: application/json
+operationID: {{$guid}}
+token: {{getAdminToken.response.body.$.data.token}}
+
+{
+  "userID": "testUser001",
+  "amount": 20000,
+  "reason": "争议交易冻结200元"
+}
+
+### 解冻金额
+POST {{baseUrl}}/wallet/admin/unfreeze_amount
+Content-Type: application/json
+operationID: {{$guid}}
+token: {{getAdminToken.response.body.$.data.token}}
+
+{
+  "freezeID": "FZ_REPLACE_WITH_ACTUAL_ID",
+  "userID": "testUser001"
+}
+
+### 审计日志查询
+POST {{baseUrl}}/wallet/admin/get_audit_logs
+Content-Type: application/json
+operationID: {{$guid}}
+token: {{getAdminToken.response.body.$.data.token}}
+
+{
+  "userID": "",
+  "action": "",
+  "operatorUserID": "",
+  "pageNumber": 1,
+  "showNumber": 20
+}
+
+### 冻结记录查询
+POST {{baseUrl}}/wallet/admin/get_freeze_records
+Content-Type: application/json
+operationID: {{$guid}}
+token: {{getAdminToken.response.body.$.data.token}}
+
+{
+  "userID": "testUser001",
+  "statusFilter": [],
+  "pageNumber": 1,
+  "showNumber": 20
+}
+
+POST {{baseUrl}}/msg/newest_seq
+Content-Type: application/json
+operationID: {{$guid}}
+token: {{getUserToken.response.body.$.data.token}}
+
+{
+  "userID": "testUser001"
+}
+
+### ============================================
+### Conversation - 获取会话列表
+### ============================================
+
+POST {{baseUrl}}/conversation/get_sorted_conversation_list
+Content-Type: application/json
+operationID: {{$guid}}
+token: {{getUserToken.response.body.$.data.token}}
+
+{
+  "userID": "testUser001",
+  "conversationIDs": [],
+  "pagination": {
+    "pageNumber": 1,
+    "showNumber": 20
+  }
+}
+
+### ============================================
+### Third - 获取对象存储上传限制
+### ============================================
+
+POST {{baseUrl}}/object/part_limit
+Content-Type: application/json
+operationID: {{$guid}}
+token: {{getUserToken.response.body.$.data.token}}
+
+{}

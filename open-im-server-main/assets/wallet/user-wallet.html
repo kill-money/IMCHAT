@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>我的钱包 - OpenIM</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f0f2f5;color:#333}
+.header{background:#1890ff;color:#fff;padding:16px 24px;display:flex;align-items:center;justify-content:space-between}
+.header h1{font-size:20px}
+.header a{color:#fff;text-decoration:none;opacity:.8}
+.container{max-width:800px;margin:20px auto;padding:0 16px}
+.balance-card{background:linear-gradient(135deg,#1890ff,#722ed1);color:#fff;border-radius:12px;padding:32px;margin-bottom:20px;text-align:center}
+.balance-card .label{font-size:14px;opacity:.8;margin-bottom:8px}
+.balance-card .amount{font-size:42px;font-weight:700;font-family:'Courier New',monospace}
+.balance-card .sub{font-size:14px;margin-top:12px;opacity:.7}
+.balance-card .frozen{color:#ffc069}
+.quick-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
+.quick-actions button{padding:16px;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;transition:transform .15s}
+.quick-actions button:hover{transform:translateY(-2px)}
+.btn-recharge{background:#52c41a;color:#fff}
+.btn-withdraw{background:#faad14;color:#fff}
+.btn-transfer{background:#1890ff;color:#fff}
+.card{background:#fff;border-radius:8px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,.1);margin-bottom:20px}
+.card-title{font-size:16px;font-weight:600;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid #f0f0f0}
+table{width:100%;border-collapse:collapse}
+th,td{padding:10px 12px;text-align:left;border-bottom:1px solid #f0f0f0;font-size:14px}
+th{background:#fafafa;font-weight:600;color:#666}
+.type-in{color:#52c41a}
+.type-out{color:#ff4d4f}
+.amount-cell{font-family:'Courier New',monospace;font-weight:600}
+.empty{text-align:center;padding:40px;color:#999}
+.modal-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.45);z-index:1000;align-items:center;justify-content:center}
+.modal-overlay.active{display:flex}
+.modal{background:#fff;border-radius:8px;padding:24px;width:380px;max-width:90vw}
+.modal h3{margin-bottom:16px}
+.modal .form-group{margin-bottom:12px}
+.modal label{display:block;font-size:13px;color:#666;margin-bottom:4px}
+.modal input,.modal textarea{width:100%;padding:8px 12px;border:1px solid #d9d9d9;border-radius:4px;font-size:14px}
+.modal .btn-row{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
+.btn{padding:8px 20px;border:none;border-radius:4px;cursor:pointer;font-size:14px}
+.btn-primary{background:#1890ff;color:#fff}
+.btn-cancel{background:#f0f0f0;color:#333}
+.toast{position:fixed;top:20px;right:20px;padding:12px 20px;border-radius:6px;color:#fff;font-size:14px;z-index:2000}
+.toast.success{background:#52c41a}
+.toast.error{background:#ff4d4f}
+.pagination{display:flex;justify-content:center;gap:8px;margin-top:16px}
+.btn-sm{padding:4px 10px;font-size:12px}
+.no-account{text-align:center;padding:60px 20px}
+.no-account button{margin-top:16px;padding:12px 32px;font-size:16px}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>我的钱包</h1>
+  <a href="/">&larr; 返回</a>
+</div>
+
+<div class="container">
+  <!-- 未开户状态 -->
+  <div id="noAccountView" class="no-account" style="display:none">
+    <h2>您还没有钱包账户</h2>
+    <p style="color:#999;margin-top:8px">点击下方按钮开通钱包</p>
+    <button class="btn btn-primary" onclick="createAccount()">立即开通</button>
+  </div>
+
+  <!-- 有账户状态 -->
+  <div id="walletView" style="display:none">
+    <!-- 余额卡片 -->
+    <div class="balance-card">
+      <div class="label">可用余额 (元)</div>
+      <div class="amount" id="balanceDisplay">0.00</div>
+      <div class="sub">冻结金额: <span class="frozen" id="frozenDisplay">0.00</span> 元</div>
+    </div>
+
+    <!-- 快捷操作 -->
+    <div class="quick-actions">
+      <button class="btn-recharge" onclick="openModal('rechargeModal')">充值</button>
+      <button class="btn-withdraw" onclick="openModal('withdrawModal')">提现</button>
+      <button class="btn-transfer" onclick="openModal('transferModal')">转账</button>
+    </div>
+
+    <!-- 交易记录 -->
+    <div class="card">
+      <div class="card-title">交易记录</div>
+      <table>
+        <thead><tr><th>时间</th><th>类型</th><th>金额</th><th>余额</th><th>备注</th></tr></thead>
+        <tbody id="txTableBody"><tr><td colspan="5" class="empty">加载中...</td></tr></tbody>
+      </table>
+      <div class="pagination" id="txPagination"></div>
+    </div>
+  </div>
+</div>
+
+<!-- 充值弹窗 -->
+<div class="modal-overlay" id="rechargeModal">
+  <div class="modal">
+    <h3>充值</h3>
+    <div class="form-group"><label>金额 (分)</label><input id="rc_amount" type="number" min="1" placeholder="输入充值金额"></div>
+    <div class="form-group"><label>备注</label><input id="rc_remark" placeholder="可选"></div>
+    <div class="btn-row">
+      <button class="btn btn-cancel" onclick="closeModal('rechargeModal')">取消</button>
+      <button class="btn btn-primary" onclick="doRecharge()">确认充值</button>
+    </div>
+  </div>
+</div>
+
+<!-- 提现弹窗 -->
+<div class="modal-overlay" id="withdrawModal">
+  <div class="modal">
+    <h3>提现</h3>
+    <div class="form-group"><label>金额 (分)</label><input id="wd_amount" type="number" min="1" placeholder="输入提现金额"></div>
+    <div class="form-group"><label>备注</label><input id="wd_remark" placeholder="可选"></div>
+    <div class="btn-row">
+      <button class="btn btn-cancel" onclick="closeModal('withdrawModal')">取消</button>
+      <button class="btn btn-primary" onclick="doWithdraw()">确认提现</button>
+    </div>
+  </div>
+</div>
+
+<!-- 转账弹窗 -->
+<div class="modal-overlay" id="transferModal">
+  <div class="modal">
+    <h3>转账</h3>
+    <div class="form-group"><label>对方用户ID</label><input id="tf_toUserID" placeholder="输入对方ID"></div>
+    <div class="form-group"><label>金额 (分)</label><input id="tf_amount" type="number" min="1" placeholder="输入转账金额"></div>
+    <div class="form-group"><label>备注</label><input id="tf_remark" placeholder="可选"></div>
+    <div class="btn-row">
+      <button class="btn btn-cancel" onclick="closeModal('transferModal')">取消</button>
+      <button class="btn btn-primary" onclick="doTransfer()">确认转账</button>
+    </div>
+  </div>
+</div>
+
+<div id="toastArea"></div>
+
+<script>
+const API_BASE = 'http://127.0.0.1:10002';
+
+// Try to get user token from localStorage (set by web-front)
+let userToken = localStorage.getItem('IMToken') || '';
+try {
+  if (!userToken) {
+    const infoStr = localStorage.getItem('IMLoginInfo');
+    if (infoStr) userToken = JSON.parse(infoStr).token || '';
+  }
+} catch(e) {}
+if (!userToken) {
+  userToken = prompt('请输入用户Token (登录后获取)', '');
+  if (userToken) localStorage.setItem('IMToken', userToken);
+}
+
+async function apiCall(path, body) {
+  const resp = await fetch(API_BASE + path, {
+    method: 'POST',
+    headers: {'Content-Type':'application/json','token': userToken,'operationID': crypto.randomUUID()},
+    body: JSON.stringify(body || {})
+  });
+  const data = await resp.json();
+  if (data.errCode && data.errCode !== 0) throw new Error(data.errMsg || 'API error');
+  return data.data || data;
+}
+
+function toast(msg, type='success') {
+  const el = document.createElement('div');
+  el.className = 'toast ' + type;
+  el.textContent = msg;
+  document.getElementById('toastArea').appendChild(el);
+  setTimeout(() => el.remove(), 3000);
+}
+
+function fmtTime(ms) { return ms ? new Date(ms).toLocaleString('zh-CN') : '-'; }
+function fmtYuan(fen) { return (fen / 100).toFixed(2); }
+function uuid() { return crypto.randomUUID(); }
+
+const txTypeNames = {1:'充值',2:'提现',3:'转出',4:'转入',5:'调账(加)',6:'调账(减)',7:'冻结',8:'解冻'};
+function txTypeName(t) { return txTypeNames[t] || '未知'; }
+function txTypeClass(t) { return [1,4,5,8].includes(t) ? 'type-in' : 'type-out'; }
+
+// ===== Load balance =====
+async function loadBalance() {
+  try {
+    const d = await apiCall('/wallet/get_balance', {});
+    document.getElementById('walletView').style.display = '';
+    document.getElementById('noAccountView').style.display = 'none';
+    document.getElementById('balanceDisplay').textContent = fmtYuan(d.balance || 0);
+    document.getElementById('frozenDisplay').textContent = fmtYuan(d.frozenAmount || 0);
+  } catch(e) {
+    if (e.message && e.message.includes('not found')) {
+      document.getElementById('noAccountView').style.display = '';
+      document.getElementById('walletView').style.display = 'none';
+    } else {
+      toast('加载失败: ' + e.message, 'error');
+    }
+  }
+}
+
+async function createAccount() {
+  try {
+    await apiCall('/wallet/create_account', {currency: 'CNY'});
+    toast('开通成功');
+    loadBalance();
+    loadTransactions();
+  } catch(e) {
+    toast('开通失败: ' + e.message, 'error');
+  }
+}
+
+// ===== Transactions =====
+let txPage = 1;
+async function loadTransactions(page) {
+  if (page) txPage = page;
+  try {
+    const d = await apiCall('/wallet/get_transactions', {pagination:{pageNumber: txPage, showNumber: 20}});
+    const tbody = document.getElementById('txTableBody');
+    if (!d.transactions || d.transactions.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="5" class="empty">暂无交易记录</td></tr>';
+      return;
+    }
+    tbody.innerHTML = d.transactions.map(t => `<tr>
+      <td>${fmtTime(t.createTime)}</td>
+      <td class="${txTypeClass(t.type)}">${txTypeName(t.type)}</td>
+      <td class="amount-cell ${txTypeClass(t.type)}">${[1,4,5,8].includes(t.type)?'+':'−'}${fmtYuan(t.amount)}</td>
+      <td class="amount-cell">${fmtYuan(t.balanceAfter)}</td>
+      <td>${esc(t.remark||'')}</td>
+    </tr>`).join('');
+  } catch(e) {
+    // ignore if no account yet
+  }
+}
+
+// ===== Operations =====
+async function doRecharge() {
+  const amount = parseInt(document.getElementById('rc_amount').value);
+  const remark = document.getElementById('rc_remark').value;
+  if (!amount || amount <= 0) return toast('请输入有效金额', 'error');
+  try {
+    await apiCall('/wallet/recharge', {amount, idempotencyKey: uuid(), remark});
+    toast('充值成功');
+    closeModal('rechargeModal');
+    loadBalance(); loadTransactions();
+  } catch(e) { toast('充值失败: ' + e.message, 'error'); }
+}
+
+async function doWithdraw() {
+  const amount = parseInt(document.getElementById('wd_amount').value);
+  const remark = document.getElementById('wd_remark').value;
+  if (!amount || amount <= 0) return toast('请输入有效金额', 'error');
+  try {
+    await apiCall('/wallet/withdraw', {amount, idempotencyKey: uuid(), remark});
+    toast('提现成功');
+    closeModal('withdrawModal');
+    loadBalance(); loadTransactions();
+  } catch(e) { toast('提现失败: ' + e.message, 'error'); }
+}
+
+async function doTransfer() {
+  const toUserID = document.getElementById('tf_toUserID').value;
+  const amount = parseInt(document.getElementById('tf_amount').value);
+  const remark = document.getElementById('tf_remark').value;
+  if (!toUserID) return toast('请输入对方用户ID', 'error');
+  if (!amount || amount <= 0) return toast('请输入有效金额', 'error');
+  try {
+    await apiCall('/wallet/transfer', {toUserID, amount, idempotencyKey: uuid(), remark});
+    toast('转账成功');
+    closeModal('transferModal');
+    loadBalance(); loadTransactions();
+  } catch(e) { toast('转账失败: ' + e.message, 'error'); }
+}
+
+function openModal(id) { document.getElementById(id).classList.add('active'); }
+function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+function esc(s) {
+  if (!s) return '';
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+// ===== Init =====
+loadBalance();
+loadTransactions();
+</script>
+</body>
+</html>

@@ -1,0 +1,16 @@
+project_name: "open-im-server"
+languages: ["go"]
+encoding: "utf-8"
+ignore_all_files_in_gitignore: true
+ignored_paths:
+  - .git
+  - vendor
+  - components
+  - node_modules
+base_modes:
+  - interactive
+  - editing
+default_modes:
+  - interactive
+  - editing
+read_only: false
