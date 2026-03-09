@@ -24,7 +24,7 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: AppColors.cardBackground,
+      color: AppColors.primary,
       elevation: 2,
       shadowColor: AppColors.shadow,
       child: SafeArea(
@@ -48,22 +48,22 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
                           child: Icon(
                             Icons.arrow_back_ios_new,
                             size: 24,
-                            color: AppColors.primary,
+                            color: Colors.white,
                           ),
                         ),
                       ),
-                    // 预留 Logo 位置（36x36）
+                    // Logo 图标（金色）
                     Container(
                       width: 36,
                       height: 36,
                       margin: const EdgeInsets.only(left: AppSpacing.sm),
                       decoration: BoxDecoration(
-                        color: AppColors.primary.withValues(alpha: 0.1),
+                        color: AppColors.accent.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(18),
                       ),
                       child: const Icon(
                         Icons.volunteer_activism,
-                        color: AppColors.primary,
+                        color: AppColors.accent,
                         size: 20,
                       ),
                     ),
@@ -77,7 +77,7 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
-                        color: AppColors.primary,
+                        color: Colors.white,
                       ),
                     ),
                   ),

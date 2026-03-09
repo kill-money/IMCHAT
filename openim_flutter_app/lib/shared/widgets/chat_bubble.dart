@@ -83,8 +83,8 @@ class ChatBubble extends StatelessWidget {
     // Text message
     return AppText(
       text,
-      style: const TextStyle(
-        color: AppColors.cardBackground,
+      style: TextStyle(
+        color: isMe ? Colors.white : AppColors.textPrimary,
       ),
     );
   }
