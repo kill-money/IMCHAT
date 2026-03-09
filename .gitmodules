@@ -1,0 +1,9 @@
+[submodule "openim-chat"]
+	path = openim-chat
+	url = https://github.com/kill-money/chat.git
+[submodule "openim-docker"]
+	path = openim-docker
+	url = https://github.com/openimsdk/openim-docker.git
+[submodule "openim-electron-demo"]
+	path = openim-electron-demo
+	url = https://github.com/openimsdk/openim-electron-demo.git
