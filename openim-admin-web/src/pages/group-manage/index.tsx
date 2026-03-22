@@ -1,9 +1,9 @@
-import { cancelMuteGroup, dismissGroup, getGroups, muteGroup } from '@/services/openim';
+import { cancelMuteGroup, dismissGroup, getGroups, muteGroup, setOfficialGroup } from '@/services/openim';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import { PageContainer, ProTable } from '@ant-design/pro-components';
 import { Avatar, message, Popconfirm, Space, Tag } from 'antd';
 import dayjs from 'dayjs';
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 
 const groupStatusMap: Record<number, { text: string; color: string }> = {
   0: { text: '正常', color: 'green' },
@@ -14,6 +14,17 @@ const groupStatusMap: Record<number, { text: string; color: string }> = {
 
 const GroupManage: React.FC = () => {
   const actionRef = useRef<ActionType>(null);
+  const [officialMap, setOfficialMap] = useState<Record<string, boolean>>({});
+
+  const handleSetOfficial = async (groupID: string, isOfficial: boolean) => {
+    const resp = await setOfficialGroup(groupID, isOfficial);
+    if (resp.errCode === 0) {
+      message.success(isOfficial ? '已设为官方群' : '已取消官方群');
+      setOfficialMap((m) => ({ ...m, [groupID]: isOfficial }));
+    } else {
+      message.error(resp.errMsg);
+    }
+  };
 
   const columns: ProColumns<OPENIM.GroupInfo>[] = [
     {
@@ -45,11 +56,23 @@ const GroupManage: React.FC = () => {
       render: (_, r) => r.createTime ? dayjs(r.createTime).format('YYYY-MM-DD HH:mm') : '-',
     },
     {
+      title: '官方',
+      dataIndex: 'groupID',
+      search: false,
+      width: 70,
+      render: (_, r) => officialMap[r.groupID] ? <Tag color="blue">官方</Tag> : null,
+    },
+    {
       title: '操作',
       valueType: 'option',
-      width: 180,
+      width: 230,
       render: (_, record) => (
         <Space>
+          {officialMap[record.groupID] ? (
+            <a onClick={() => handleSetOfficial(record.groupID, false)}>取消官方</a>
+          ) : (
+            <a onClick={() => handleSetOfficial(record.groupID, true)} style={{ color: '#1677ff' }}>设为官方</a>
+          )}
           <Popconfirm
             title="确定解散该群组？此操作不可撤销"
             onConfirm={async () => {
@@ -88,10 +111,13 @@ const GroupManage: React.FC = () => {
         actionRef={actionRef}
         rowKey="groupID"
         columns={columns}
+        scroll={{ x: 'max-content', y: 600 }}
+        virtual
         request={async (params) => {
           const resp = await getGroups(
             { pageNumber: params.current || 1, showNumber: params.pageSize || 20 },
-            params.groupID || params.groupName,
+            params.groupName,
+            params.groupID,
           );
           return {
             data: resp.data?.groups || [],

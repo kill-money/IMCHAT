@@ -18,7 +18,7 @@ Future<void> initDesktopWindow() async {
     size: Size(1100, 700),
     minimumSize: Size(800, 600),
     center: true,
-    title: 'OpenIM',
+    title: '乡村振兴3.0',
     backgroundColor: Color(0x00000000),
     skipTaskbar: false,
     titleBarStyle: TitleBarStyle.normal,
@@ -44,14 +44,13 @@ Future<void> _initSystemTray() async {
   systemTray = SystemTray();
 
   // Windows: use runner resources path (assets/app_icon.ico not in pubspec bundle)
-  String iconPath = Platform.isWindows
-      ? 'resources\\app_icon.ico'
-      : 'assets/app_icon.png';
+  String iconPath =
+      Platform.isWindows ? 'resources\\app_icon.ico' : 'assets/app_icon.png';
 
   await systemTray!.initSystemTray(
-    title: 'OpenIM',
+    title: '乡村振兴3.0',
     iconPath: iconPath,
-    toolTip: 'OpenIM - 即时通讯',
+    toolTip: '乡村振兴3.0 - 即时通讯',
   );
 
   final menu = Menu();

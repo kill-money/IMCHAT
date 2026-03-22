@@ -9,7 +9,7 @@ import { Spin } from 'antd';
 import { createStyles } from 'antd-style';
 import React from 'react';
 import { flushSync } from 'react-dom';
-import { outLogin } from '@/services/ant-design-pro/api';
+import { clearTokens } from '@/services/openim';
 import HeaderDropdown from '../HeaderDropdown';
 
 export type GlobalHeaderRightProps = {
@@ -20,7 +20,7 @@ export type GlobalHeaderRightProps = {
 export const AvatarName = () => {
   const { initialState } = useModel('@@initialState');
   const { currentUser } = initialState || {};
-  return <span className="anticon">{currentUser?.name}</span>;
+  return <span className="anticon">{currentUser?.nickname}</span>;
 };
 
 const useStyles = createStyles(({ token }) => {
@@ -49,7 +49,7 @@ export const AvatarDropdown: React.FC<GlobalHeaderRightProps> = ({
    * 退出登录，并且将当前的 url 保存
    */
   const loginOut = async () => {
-    await outLogin();
+    clearTokens();
     const { search, pathname } = window.location;
     const urlParams = new URL(window.location.href).searchParams;
     const searchParams = new URLSearchParams({
@@ -99,7 +99,7 @@ export const AvatarDropdown: React.FC<GlobalHeaderRightProps> = ({
 
   const { currentUser } = initialState;
 
-  if (!currentUser || !currentUser.name) {
+  if (!currentUser || !currentUser.nickname) {
     return loading;
   }
 

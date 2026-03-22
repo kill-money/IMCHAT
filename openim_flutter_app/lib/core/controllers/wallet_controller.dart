@@ -1,4 +1,4 @@
-/// 二开：钱包系统 — WalletController (ChangeNotifier)
+/// 钱包系统 — WalletController (ChangeNotifier)
 library;
 
 import 'package:flutter/foundation.dart';
@@ -16,6 +16,11 @@ class WalletController extends ChangeNotifier {
   bool get loading => _loading;
   String get error => _error;
 
+  void debugPrintState() {
+    debugPrint(
+        '[WalletController] loading=$_loading balance=${_account?.balance} cards=${_cards.length} error=$_error');
+  }
+
   Future<void> loadWallet() async {
     _loading = true;
     _error = '';
@@ -26,11 +31,11 @@ class WalletController extends ChangeNotifier {
         final data = res['data'] as Map<String, dynamic>? ?? {};
         _account = WalletAccount.fromJson(data);
       } else {
-        _error = res['errMsg']?.toString() ?? '加载失败';
+        _error = '加载失败，请稍后重试';
       }
     } catch (e) {
       _error = '网络错误';
-      debugPrint('loadWallet error: $e');
+      if (kDebugMode) debugPrint('loadWallet error: $e');
     }
     _loading = false;
     notifyListeners();
@@ -47,7 +52,7 @@ class WalletController extends ChangeNotifier {
         notifyListeners();
       }
     } catch (e) {
-      debugPrint('loadCards error: $e');
+      if (kDebugMode) debugPrint('loadCards error: $e');
     }
   }
 
@@ -64,7 +69,7 @@ class WalletController extends ChangeNotifier {
         return true;
       }
     } catch (e) {
-      debugPrint('addCard error: $e');
+      if (kDebugMode) debugPrint('addCard error: $e');
     }
     return false;
   }
@@ -78,7 +83,7 @@ class WalletController extends ChangeNotifier {
         return true;
       }
     } catch (e) {
-      debugPrint('removeCard error: $e');
+      if (kDebugMode) debugPrint('removeCard error: $e');
     }
     return false;
   }
@@ -91,9 +96,15 @@ class WalletController extends ChangeNotifier {
         final msg = res['data']?['message']?.toString();
         return msg ?? '提现申请已提交';
       }
-      return res['errMsg']?.toString() ?? '操作失败，请稍后重试';
+      return '操作失败，请稍后重试';
     } catch (_) {
       return '网络错误，请稍后重试';
     }
+  }
+
+  @override
+  void dispose() {
+    _cards.clear();
+    super.dispose();
   }
 }

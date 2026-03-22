@@ -1,4 +1,4 @@
-/// 二开：钱包系统 — 数据模型
+/// 钱包系统 — 数据模型
 library;
 
 class WalletAccount {

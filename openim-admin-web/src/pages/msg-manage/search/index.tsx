@@ -1,11 +1,9 @@
-import { searchMessages } from '@/services/openim';
+import { searchMessages, adminRecallMessage } from '@/services/openim';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import { PageContainer, ProTable } from '@ant-design/pro-components';
-import { DatePicker, Tag } from 'antd';
+import { message, Popconfirm, Tag } from 'antd';
 import dayjs from 'dayjs';
-import React, { useRef, useState } from 'react';
-
-const { RangePicker } = DatePicker;
+import React, { useRef } from 'react';
 
 const contentTypeMap: Record<number, string> = {
   101: '文本',
@@ -22,7 +20,6 @@ const contentTypeMap: Record<number, string> = {
 
 const MsgSearch: React.FC = () => {
   const actionRef = useRef<ActionType>(null);
-  const [dateRange, setDateRange] = useState<[string, string] | null>(null);
 
   const columns: ProColumns<OPENIM.MessageInfo>[] = [
     { title: '发送者ID', dataIndex: 'sendID', width: 180, copyable: true },
@@ -52,18 +49,35 @@ const MsgSearch: React.FC = () => {
       title: '时间范围',
       dataIndex: 'dateRange',
       hideInTable: true,
-      renderFormItem: () => (
-        <RangePicker
-          onChange={(_, dateStrings) => {
-            if (dateStrings[0] && dateStrings[1]) {
-              setDateRange(dateStrings as [string, string]);
+      valueType: 'dateTimeRange',
+      fieldProps: { showTime: false, placeholder: ['开始时间', '结束时间'] },
+    },
+    {
+      title: '操作',
+      valueType: 'option',
+      width: 100,
+      render: (_, record) => (
+        <Popconfirm
+          title="确定撤回此消息？此操作不可恢复"
+          onConfirm={async () => {
+            const resp = await adminRecallMessage({
+              conversationID: record.conversationID ?? '',
+              seq: record.seq ?? 0,
+              senderID: record.sendID,
+              sendTime: typeof record.sendTime === 'number' ? record.sendTime : dayjs(record.sendTime).valueOf(),
+            });
+            if (resp.errCode === 0) {
+              message.success('已撤回');
+              actionRef.current?.reload();
             } else {
-              setDateRange(null);
+              message.error(resp.errMsg ?? '撤回失败');
             }
           }}
-        />
+        >
+          <a className="ant-typography ant-typography-danger">撤回</a>
+        </Popconfirm>
       ),
-    } as ProColumns<OPENIM.MessageInfo>,
+    },
   ];
 
   return (
@@ -73,7 +87,10 @@ const MsgSearch: React.FC = () => {
         actionRef={actionRef}
         rowKey="serverMsgID"
         columns={columns}
+        scroll={{ x: 'max-content', y: 600 }}
+        virtual
         request={async (params) => {
+          const dr = params.dateRange as [string, string] | undefined;
           const resp = await searchMessages({
             pagination: {
               pageNumber: params.current || 1,
@@ -81,13 +98,13 @@ const MsgSearch: React.FC = () => {
             },
             sendID: params.sendID || '',
             recvID: params.recvID || '',
-            sendTime: dateRange
-              ? `${dayjs(dateRange[0]).valueOf()}:${dayjs(dateRange[1]).valueOf()}`
+            sendTime: dr?.[0] && dr?.[1]
+              ? `${dayjs(dr[0]).valueOf()}:${dayjs(dr[1]).valueOf()}`
               : undefined,
           });
           return {
             data: resp.data?.chatLogs || [],
-            total: resp.data?.total || 0,
+            total: resp.data?.chatLogsNum || 0,
             success: resp.errCode === 0,
           };
         }}

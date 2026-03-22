@@ -10,7 +10,7 @@ const AdminManage: React.FC = () => {
   const actionRef = useRef<ActionType>(null);
 
   const columns: ProColumns<OPENIM.AdminAccount>[] = [
-    { title: '账号', dataIndex: 'adminAccount', width: 180 },
+    { title: '账号', dataIndex: 'account', width: 180 },
     { title: '昵称', dataIndex: 'nickname', width: 150 },
     { title: '级别', dataIndex: 'level', width: 80, search: false },
     {
@@ -28,7 +28,7 @@ const AdminManage: React.FC = () => {
         <Popconfirm
           title="确定删除该管理员？"
           onConfirm={async () => {
-            const resp = await deleteAdmin([record.adminAccount]);
+            const resp = await deleteAdmin([record.userID]);
             if (resp.errCode === 0) {
               message.success('已删除');
               actionRef.current?.reload();
@@ -74,7 +74,7 @@ const AdminManage: React.FC = () => {
             { pageNumber: params.current || 1, showNumber: params.pageSize || 20 },
           );
           return {
-            data: resp.data?.admins || [],
+            data: resp.data?.adminAccounts || [],
             total: resp.data?.total || 0,
             success: resp.errCode === 0,
           };

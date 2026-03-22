@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../theme/colors.dart';
 import '../../theme/spacing.dart';
+import '../../theme/typography.dart';
 import 'app_text.dart';
 
 /// 全局页头组件，统一高度 56dp、背景与阴影
@@ -52,21 +53,6 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
                           ),
                         ),
                       ),
-                    // Logo 图标（金色）
-                    Container(
-                      width: 36,
-                      height: 36,
-                      margin: const EdgeInsets.only(left: AppSpacing.sm),
-                      decoration: BoxDecoration(
-                        color: AppColors.accent.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(18),
-                      ),
-                      child: const Icon(
-                        Icons.volunteer_activism,
-                        color: AppColors.accent,
-                        size: 20,
-                      ),
-                    ),
                   ],
                 ),
                 Expanded(
@@ -76,9 +62,7 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
                       isTitle: true,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: Colors.white,
-                      ),
+                      style: AppTypography.appBar,
                     ),
                   ),
                 ),
@@ -97,4 +81,3 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
     );
   }
 }
-

@@ -1,4 +1,4 @@
-/// 二开：钱包系统 — 用户端钱包页面（移动端）
+/// 钱包系统 — 用户端钱包页面（移动端）
 library;
 
 import 'package:flutter/material.dart';
@@ -23,9 +23,12 @@ class _MobileWalletPageState extends State<MobileWalletPage> {
   @override
   void initState() {
     super.initState();
-    final wallet = context.read<WalletController>();
-    wallet.loadWallet();
-    wallet.loadCards();
+    debugPrint('[PAGE_INIT] MobileWalletPage');
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final wallet = context.read<WalletController>();
+      wallet.loadWallet();
+      wallet.loadCards();
+    });
   }
 
   void _showAddCardDialog() {
@@ -99,8 +102,17 @@ class _MobileWalletPageState extends State<MobileWalletPage> {
       return;
     }
 
+    final balance = wallet.account?.balance ?? 0;
+    if (balance <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('当前余额为零，无法提现')),
+      );
+      return;
+    }
+
     BankCard selectedCard = wallet.cards.first;
     final amountCtrl = TextEditingController();
+    String? amountError;
 
     showDialog(
       context: context,
@@ -112,6 +124,12 @@ class _MobileWalletPageState extends State<MobileWalletPage> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Text(
+                  '可用余额: ¥ ${wallet.account?.balanceYuan ?? '0.00'}',
+                  style: const TextStyle(
+                      color: AppColors.textSecondary, fontSize: 13),
+                ),
+                const SizedBox(height: AppSpacing.md),
                 const AppText('收款卡', isSmall: true),
                 const SizedBox(height: AppSpacing.xs),
                 DropdownButtonFormField<BankCard>(
@@ -119,8 +137,7 @@ class _MobileWalletPageState extends State<MobileWalletPage> {
                   items: wallet.cards
                       .map((c) => DropdownMenuItem(
                             value: c,
-                            child: Text(
-                                '${c.bankName} **** ${c.cardNumber}'),
+                            child: Text('${c.bankName} **** ${c.cardNumber}'),
                           ))
                       .toList(),
                   onChanged: (v) {
@@ -131,10 +148,24 @@ class _MobileWalletPageState extends State<MobileWalletPage> {
                 TextField(
                   controller: amountCtrl,
                   keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: '提现金额（元）',
                     prefixText: '¥ ',
+                    errorText: amountError,
                   ),
+                  onChanged: (_) {
+                    final yuan = double.tryParse(amountCtrl.text.trim()) ?? 0;
+                    final fen = (yuan * 100).round();
+                    setSt(() {
+                      if (yuan <= 0) {
+                        amountError = '请输入有效金额';
+                      } else if (fen > balance) {
+                        amountError = '超出可用余额';
+                      } else {
+                        amountError = null;
+                      }
+                    });
+                  },
                 ),
               ],
             ),
@@ -145,33 +176,78 @@ class _MobileWalletPageState extends State<MobileWalletPage> {
               child: const Text('取消'),
             ),
             TextButton(
-              onPressed: () async {
+              onPressed: () {
                 final yuan = double.tryParse(amountCtrl.text.trim()) ?? 0;
-                if (yuan <= 0) return;
+                final fen = (yuan * 100).round();
+                if (yuan <= 0 || fen > balance) return;
                 Navigator.pop(ctx);
-                final msg = await wallet.withdraw(
-                  amount: (yuan * 100).round(),
-                  cardID: selectedCard.id,
-                );
-                if (!mounted) return;
-                showDialog(
-                  context: context,
-                  builder: (_) => AlertDialog(
-                    title: const Text('提现结果'),
-                    content: Text(msg),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(context),
-                        child: const Text('确定'),
-                      ),
-                    ],
-                  ),
-                );
+                // 二次确认
+                _confirmWithdraw(wallet, fen, selectedCard, yuan);
               },
-              child: const Text('提交'),
+              child: const Text('下一步'),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  void _confirmWithdraw(
+    WalletController wallet,
+    int amountFen,
+    BankCard card,
+    double amountYuan,
+  ) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('确认提现'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('提现金额: ¥ ${amountYuan.toStringAsFixed(2)}'),
+            const SizedBox(height: 8),
+            Text('收款卡: ${card.bankName} **** ${card.cardNumber}'),
+            const SizedBox(height: 8),
+            Text('持卡人: ${card.cardHolder}'),
+            const SizedBox(height: 12),
+            const Text(
+              '提现申请提交后将由系统审核，请耐心等待。',
+              style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('取消'),
+          ),
+          FilledButton(
+            onPressed: () async {
+              Navigator.pop(ctx);
+              final msg = await wallet.withdraw(
+                amount: amountFen,
+                cardID: card.id,
+              );
+              if (!mounted) return;
+              showDialog(
+                context: context,
+                builder: (_) => AlertDialog(
+                  title: const Text('提现结果'),
+                  content: Text(msg),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('确定'),
+                    ),
+                  ],
+                ),
+              );
+            },
+            child: const Text('确认提现'),
+          ),
+        ],
       ),
     );
   }

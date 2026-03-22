@@ -5,7 +5,9 @@
 import {
   addWhitelistUser,
   deleteWhitelistUsers,
+  getClientConfig,
   searchWhitelist,
+  setClientConfig,
   updateWhitelistUser,
 } from '@/services/openim';
 import { PlusOutlined } from '@ant-design/icons';
@@ -19,7 +21,7 @@ import {
 } from '@ant-design/pro-components';
 import { Button, message, Popconfirm, Switch, Tag, Tooltip } from 'antd';
 import dayjs from 'dayjs';
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 const PERMISSION_LABELS: Record<string, string> = {
   view_ip: '查看IP',
@@ -34,9 +36,35 @@ const ROLE_LABELS: Record<string, { label: string; color: string }> = {
   user: { label: '普通用户', color: 'blue' },
 };
 
+/** 白名单登录功能开关 key（对应后端 constant.WhitelistLoginEnabledKey） */
+const WHITELIST_ENABLED_KEY = 'whitelistLoginEnabled';
+
 const WhitelistPage: React.FC = () => {
   const actionRef = useRef<ActionType>(null);
   const [addOpen, setAddOpen] = useState(false);
+  const [whitelistEnabled, setWhitelistEnabled] = useState(false);
+  const [toggleLoading, setToggleLoading] = useState(false);
+
+  // 加载白名单功能开关状态
+  useEffect(() => {
+    getClientConfig().then((resp) => {
+      if (resp.errCode === 0 && resp.data) {
+        setWhitelistEnabled(resp.data.config?.[WHITELIST_ENABLED_KEY] === '1');
+      }
+    });
+  }, []);
+
+  const handleToggle = async (checked: boolean) => {
+    setToggleLoading(true);
+    const resp = await setClientConfig({ [WHITELIST_ENABLED_KEY]: checked ? '1' : '0' });
+    setToggleLoading(false);
+    if (resp.errCode === 0) {
+      setWhitelistEnabled(checked);
+      message.success(checked ? '白名单登录已开启' : '白名单登录已关闭（所有账号可登录）');
+    } else {
+      message.error(resp.errMsg ?? '操作失败');
+    }
+  };
 
   const columns: ProColumns<OPENIM.WhitelistUser>[] = [
     {
@@ -136,6 +164,34 @@ const WhitelistPage: React.FC = () => {
 
   return (
     <PageContainer>
+      {/* 白名单功能全局开关 */}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 12,
+          marginBottom: 16,
+          padding: '12px 16px',
+          background: '#f5f5f5',
+          borderRadius: 8,
+          border: '1px solid #e0e0e0',
+        }}
+      >
+        <span style={{ fontWeight: 600, fontSize: 14 }}>白名单登录验证：</span>
+        <Switch
+          checked={whitelistEnabled}
+          loading={toggleLoading}
+          onChange={handleToggle}
+          checkedChildren="已开启"
+          unCheckedChildren="已关闭"
+        />
+        <span style={{ color: '#888', fontSize: 12 }}>
+          {whitelistEnabled
+            ? '当前仅允许白名单内的账号登录'
+            : '当前所有已注册账号均可登录（白名单不生效）'}
+        </span>
+      </div>
+
       <ProTable<OPENIM.WhitelistUser>
         headerTitle="登录白名单"
         actionRef={actionRef}

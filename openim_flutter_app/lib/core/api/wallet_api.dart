@@ -1,4 +1,4 @@
-/// 二开：钱包系统 — 用户端 API 封装（chat-api, port 10008）
+/// 钱包系统 — 用户端 API 封装（chat-api, port 10008）
 library;
 
 import 'api_client.dart';

@@ -1,4 +1,7 @@
-url: http://127.0.0.1:10006/callback
+# Webhook 回调地址。
+# 本地开发（非 Docker）：http://127.0.0.1:10006/callback
+# Docker Compose 部署   ：http://webhook-server:10006/callback（使用容器名）
+url: http://webhook-server:10006/callback
 beforeSendSingleMsg:
   enable: false
   timeout: 5

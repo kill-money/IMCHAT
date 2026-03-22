@@ -15,7 +15,7 @@ interface OnlineRow {
 }
 
 const OnlineUsers: React.FC = () => {
-  const actionRef = useRef<ActionType>();
+  const actionRef = useRef<ActionType>(undefined);
   const [data, setData] = useState<OnlineRow[]>([]);
   const [loading, setLoading] = useState(false);
 

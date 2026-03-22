@@ -29,6 +29,33 @@ export default [
     component: "./dashboard",
   },
   {
+    path: "/account",
+    name: "账号管理",
+    icon: "user",
+    routes: [
+      {
+        path: "/account/center",
+        name: "个人中心",
+        component: "./account/center",
+      },
+      {
+        path: "/account/settings",
+        name: "个人设置",
+        component: "./account/settings",
+      },
+      {
+        path: "/account/permissions",
+        name: "权限管理",
+        component: "./account/permissions",
+      },
+      {
+        path: "/account/2fa",
+        name: "双因素认证",
+        component: "./account/2fa",
+      },
+    ],
+  },
+  {
     path: "/user-manage",
     name: "用户管理",
     icon: "team",
@@ -47,6 +74,11 @@ export default [
         path: "/user-manage/block",
         name: "封禁管理",
         component: "./user-manage/block",
+      },
+      {
+        path: "/user-manage/batch",
+        name: "批量创建",
+        component: "./user-manage/batch",
       },
     ],
   },
@@ -71,7 +103,31 @@ export default [
         name: "发送消息",
         component: "./msg-manage/send",
       },
+      {
+        path: "/msg-manage/broadcast",
+        name: "系统广播",
+        component: "./msg-manage/broadcast",
+      },
     ],
+  },
+  {
+    path: "/content-filter",
+    name: "内容过滤",
+    icon: "filter",
+    component: "./system/content-filter",
+  },
+  // /applet 路由已移除：无对应组件实现
+  {
+    path: "/receptionist",
+    name: "接待号",
+    icon: "customer-service",
+    component: "./security/receptionist",
+  },
+  {
+    path: "/wallet/withdraw-audit",
+    name: "提现审核",
+    icon: "audit",
+    component: "./system/wallet",
   },
   {
     path: "/system",
@@ -89,6 +145,11 @@ export default [
         component: "./system/ip-forbidden",
       },
       {
+        path: "/system/ip-user-limit",
+        name: "IP登录限制",
+        component: "./system/ip-user-limit",
+      },
+      {
         path: "/system/user-admin",
         name: "用户端管理员",
         component: "./system/user-admin",
@@ -97,6 +158,36 @@ export default [
         path: "/system/wallet",
         name: "资金管理",
         component: "./system/wallet",
+      },
+      {
+        path: "/system/config-center",
+        name: "配置中心",
+        component: "./system/config-center",
+      },
+      {
+        path: "/system/content-filter",
+        name: "内容过滤",
+        component: "./system/content-filter",
+      },
+      {
+        path: "/system/feature-toggle",
+        name: "功能开关",
+        component: "./system/feature-toggle",
+      },
+      {
+        path: "/system/version",
+        name: "版本管理",
+        component: "./system/version",
+      },
+      {
+        path: "/system/ratelimit",
+        name: "限流策略",
+        component: "./system/ratelimit",
+      },
+      {
+        path: "/system/policy",
+        name: "策略引擎",
+        component: "./system/policy",
       },
     ],
   },
@@ -115,12 +206,18 @@ export default [
         name: "接待员管理",
         component: "./security/receptionist",
       },
+      {
+        path: "/security/logs",
+        name: "审计日志",
+        component: "./security/logs",
+      },
     ],
   },
   {
     path: "/banner-manage",
     name: "Banner管理",
     icon: "picture",
+    hideInMenu: true, // Banner 服务（port 10011）尚未部署，暂时隐藏入口
     component: "./banner-manage",
   },
   {

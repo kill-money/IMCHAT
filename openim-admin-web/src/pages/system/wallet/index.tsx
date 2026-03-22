@@ -1,11 +1,14 @@
 /**
- * 资金管理页面（二开）
+ * 资金管理页面
  * 管理员查询/调整用户钱包余额、查看流水
  */
 import {
   adjustWalletBalance,
   getUserWallet,
   getWalletTransactions,
+  listWithdrawRequests,
+  reviewWithdraw,
+  type WithdrawRequest,
 } from '@/services/openim';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import {
@@ -13,10 +16,11 @@ import {
   PageContainer,
   ProFormDigit,
   ProFormRadio,
+  ProFormText,
   ProFormTextArea,
   ProTable,
 } from '@ant-design/pro-components';
-import { Button, Card, Descriptions, Drawer, message, Tag } from 'antd';
+import { Button, Card, Descriptions, Drawer, message, Popconfirm, Tag, Tabs, Input } from 'antd';
 import dayjs from 'dayjs';
 import React, { useRef, useState } from 'react';
 
@@ -155,7 +159,7 @@ const WalletPage: React.FC = () => {
             userID: wallet.userID,
             amount: delta,
             note: values.note ?? '',
-          });
+          }, values.confirmPassword);
           if (resp.errCode === 0) {
             message.success('操作成功');
             // Refresh wallet display
@@ -190,6 +194,12 @@ const WalletPage: React.FC = () => {
           label="备注"
           placeholder="请输入操作备注（可选）"
           fieldProps={{ rows: 2 }}
+        />
+        <ProFormText.Password
+          name="confirmPassword"
+          label="管理员密码"
+          placeholder="请输入您的登录密码以确认操作"
+          rules={[{ required: true, message: '请输入管理员密码' }]}
         />
       </ModalForm>
 
@@ -226,6 +236,74 @@ const WalletPage: React.FC = () => {
           pagination={{ pageSize: 20 }}
         />
       </Drawer>
+
+      {/* 提现审批 Tab (below the above wallet section) */}
+      <Card title="提现申请审批" style={{ marginTop: 16 }}>
+        <ProTable<WithdrawRequest>
+          rowKey="ID"
+          search={false}
+          request={async (params) => {
+            const resp = await listWithdrawRequests("", {
+              pageNumber: params.current ?? 1,
+              showNumber: params.pageSize ?? 20,
+            });
+            if (resp.errCode !== 0) return { data: [], success: false, total: 0 };
+            return {
+              data: resp.data?.list ?? [],
+              success: true,
+              total: resp.data?.total ?? 0,
+            };
+          }}
+          columns={[
+            { title: '用户ID', dataIndex: 'UserID', width: 180, copyable: true },
+            {
+              title: '金额',
+              dataIndex: 'Amount',
+              width: 120,
+              render: (_, r) => `¥${(r.Amount / 100).toFixed(2)}`,
+            },
+            {
+              title: '状态',
+              dataIndex: 'Status',
+              width: 100,
+              render: (_, r) => {
+                const colorMap: Record<string, string> = { pending: 'orange', approved: 'green', rejected: 'red' };
+                const labelMap: Record<string, string> = { pending: '待审批', approved: '已通过', rejected: '已拒绝' };
+                return <Tag color={colorMap[r.Status] ?? 'default'}>{labelMap[r.Status] ?? r.Status}</Tag>;
+              },
+            },
+            { title: '备注', dataIndex: 'Note', ellipsis: true },
+            { title: '审批意见', dataIndex: 'Reason', ellipsis: true },
+            {
+              title: '时间',
+              dataIndex: 'CreatedAt',
+              width: 160,
+              render: (_, r) => r.CreatedAt ? dayjs(r.CreatedAt).format('YYYY-MM-DD HH:mm') : '-',
+            },
+            {
+              title: '操作',
+              width: 150,
+              render: (_, record) => record.Status === 'pending' ? (
+                <span>
+                  <Popconfirm title="确定通过此提现申请？" onConfirm={async () => {
+                    const resp = await reviewWithdraw(record.ID, 'approved', '管理员批准');
+                    if (resp.errCode === 0) { message.success('已通过'); } else { message.error(resp.errMsg); }
+                  }}>
+                    <a style={{ color: '#52c41a', marginRight: 8 }}>通过</a>
+                  </Popconfirm>
+                  <Popconfirm title="确定拒绝此提现申请？" onConfirm={async () => {
+                    const resp = await reviewWithdraw(record.ID, 'rejected', '管理员拒绝');
+                    if (resp.errCode === 0) { message.success('已拒绝'); } else { message.error(resp.errMsg); }
+                  }}>
+                    <a style={{ color: '#ff4d4f' }}>拒绝</a>
+                  </Popconfirm>
+                </span>
+              ) : '-',
+            },
+          ]}
+          pagination={{ pageSize: 20 }}
+        />
+      </Card>
     </PageContainer>
   );
 };

@@ -1,8 +1,8 @@
-/// 二开：推荐系统 — 对话头部 IP 显示徽章（仅对 canViewIP 用户可见）
+/// 推荐系统 — 对话头部 IP 显示徽章（仅对 canViewIP 用户可见）
 library;
 
 import 'package:flutter/material.dart';
-import '../../core/api/chat_api.dart';
+import '../../core/api/user_api.dart';
 import '../theme/colors.dart';
 
 class ConversationIPBadge extends StatefulWidget {
@@ -43,11 +43,17 @@ class _ConversationIPBadgeState extends State<ConversationIPBadge> {
       return;
     }
     try {
-      final res = await UserApi.getUserIPInfo(userID: widget.partnerUserID);
+      final res =
+          await UserApi.getUserIPInfo(targetUserID: widget.partnerUserID);
       if (res['errCode'] == 0) {
         final data = res['data'] ?? {};
         final ip = data['lastIP']?.toString() ?? '';
-        if (mounted) setState(() { _ip = ip.isEmpty ? null : ip; _loading = false; });
+        if (mounted) {
+          setState(() {
+            _ip = ip.isEmpty ? null : ip;
+            _loading = false;
+          });
+        }
       } else {
         if (mounted) setState(() => _loading = false);
       }

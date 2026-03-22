@@ -28,10 +28,25 @@ declare namespace OPENIM {
     nickname: string;
     faceURL: string;
     level: number;
+    /** 双 Token：7天刷新令牌（UUID） */
+    refreshToken?: string;
+    /** access token 有效期（秒），固定 900 */
+    expiresIn?: number;
+  }
+
+  interface RefreshTokenResult {
+    adminToken: string;
+    refreshToken: string;
+    expiresIn: number;
+  }
+
+  interface PermissionSet {
+    permissions: string[];
   }
 
   interface AdminInfo {
-    adminAccount: string;
+    account: string;
+    userID: string;
     nickname: string;
     faceURL: string;
     level: number;
@@ -52,12 +67,14 @@ declare namespace OPENIM {
     appMangerLevel?: number;
     globalRecvMsgOpt?: number;
     ex?: string;
-    /** 二开：最后登录 IP */
+    /** 最后登录 IP */
     lastIP?: string;
-    /** 二开：最后登录时间（毫秒） */
+    /** 最后登录时间（毫秒） */
     lastIPTime?: number;
-    /** 二开：0=普通用户 1=用户端管理员 */
+    /** 0=普通用户 1=用户端管理员 */
     appRole?: number;
+    /** 0=普通账号 1=官方账号（金 V 标识）*/
+    isOfficial?: number;
   }
 
   interface UserListResult {
@@ -76,13 +93,13 @@ declare namespace OPENIM {
     nickname: string;
     faceURL: string;
     reason: string;
-    opAdminAccount: string;
+    opUserID: string;
     createTime: number;
   }
 
   interface BlockUserListResult {
     total: number;
-    blocks: BlockUser[];
+    users: BlockUser[];
   }
 
   // ========== 群组 ==========
@@ -122,6 +139,7 @@ declare namespace OPENIM {
     clientMsgID: string;
     sendID: string;
     recvID: string;
+    conversationID?: string;
     senderNickname: string;
     senderFaceURL: string;
     groupID?: string;
@@ -134,25 +152,50 @@ declare namespace OPENIM {
   }
 
   interface MessageSearchResult {
-    total: number;
+    chatLogsNum: number;
     chatLogs: MessageInfo[];
   }
 
   // ========== 统计 ==========
-  interface DateCount {
-    date: string;
-    count: number;
-  }
 
-  interface StatisticsResult {
+  /**
+   * im-server /statistics/user/register 和 /statistics/group/create 响应
+   * total  = 全量历史总数（不受时间范围影响）
+   * before = 时间范围起点之前的累计数
+   * count  = 时间范围内每日增量 map（key=YYYY-MM-DD, value=数量）
+   */
+  interface IMCountResult {
     total: number;
     before: number;
-    dateCount: DateCount[];
+    count: Record<string, number>;
+  }
+
+  /**
+   * admin /statistic/new_user_count 响应（openim-chat 二开接口）
+   * total      = 全量历史注册总数
+   * date_count = 时间范围内每日新增 map（key=YYYY-MM-DD, value=数量）
+   */
+  interface NewUserCountResult {
+    total: number;
+    date_count: Record<string, number>;
+  }
+
+  /**
+   * admin /statistic/login_user_count 响应（openim-chat 二开接口）
+   * loginCount   = 时间范围内登录用户数
+   * unloginCount = 时间范围内未登录用户数
+   * count        = 时间范围内每日登录 map
+   */
+  interface LoginCountResult {
+    loginCount: number;
+    unloginCount: number;
+    count: Record<string, number>;
   }
 
   // ========== 管理员 ==========
   interface AdminAccount {
-    adminAccount: string;
+    account: string;
+    userID: string;
     nickname: string;
     faceURL: string;
     level: number;
@@ -161,20 +204,19 @@ declare namespace OPENIM {
 
   interface AdminListResult {
     total: number;
-    admins: AdminAccount[];
+    adminAccounts: AdminAccount[];
   }
 
   // ========== 邀请码 ==========
   interface InvitationCode {
     invitationCode: string;
     createTime: number;
-    usedTimes: number;
-    lastUsedTime: number;
+    usedUserID?: string;
   }
 
   interface InvitationCodeListResult {
     total: number;
-    invitationCodes: InvitationCode[];
+    list: InvitationCode[];
   }
 
   // ========== IP 封禁 ==========
@@ -220,7 +262,7 @@ declare namespace OPENIM {
     logs: ClientLog[];
   }
 
-  /** 二开：用户 IP 登录历史单条 */
+  /** 用户 IP 登录历史单条 */
   interface UserIPLogEntry {
     ip: string;
     loginTime: number;
@@ -233,7 +275,7 @@ declare namespace OPENIM {
     logs: UserIPLogEntry[];
   }
 
-  /** 二开：白名单用户 */
+  /** 白名单用户 */
   interface WhitelistUser {
     id: string;
     identifier: string;       // +8613800138000 or email
@@ -246,7 +288,7 @@ declare namespace OPENIM {
     updateTime: string;
   }
 
-  /** 二开：批量创建用户结果 */
+  /** 批量创建用户结果 */
   interface BatchCreateResult {
     created: number;
     skipped: number;
@@ -279,6 +321,34 @@ declare namespace OPENIM {
     createdAt: string;
   }
 
+  // ========== 批量导入用户（二开）==========
+  /** 通过 JSON 批量导入时每条用户记录的结构（与后端 RegisterUserInfo 对齐） */
+  interface RegisterUserImportInfo {
+    userID?: string;
+    nickname: string;
+    faceURL?: string;
+    birth?: number;       // Unix ms
+    gender?: number;      // 1=男 2=女
+    areaCode: string;     // 如 +86
+    phoneNumber: string;
+    email?: string;
+    account?: string;
+    password: string;     // 明文，后端统一 SHA-256
+  }
+
+  // ========== 应用版本管理 ==========
+  interface ApplicationVersion {
+    id: string;
+    platform: string;     // android / ios / windows / ...
+    version: string;
+    url: string;
+    text: string;
+    force: boolean;
+    latest: boolean;
+    hot: boolean;
+    createTime: number;   // Unix ms
+  }
+
   interface ReferralBinding {
     id: string;
     adminId: string;
@@ -306,5 +376,36 @@ declare namespace OPENIM {
     note: string;
     opAdminID: string;
     createdAt: string;
+  }
+
+  // ========== 安全审计日志（二开）==========
+  interface SecurityLog {
+    _id: string;
+    operator_id: string;
+    operator_name: string;
+    action: string;       // login / ban_user / reset_pass 等
+    target_id: string;
+    target_type: string;  // user / group / ip / system
+    detail: string;
+    ip: string;
+    success: boolean;
+    created_at: string;   // ISO-8601
+  }
+
+  interface SecurityLogResult {
+    total: number;
+    list: SecurityLog[];
+  }
+
+  // ========== 用户 IP 登录限制（二开）==========
+  interface UserIPLimitLoginItem {
+    userID: string;
+    ip: string;
+    createTime: number;   // Unix ms
+    user?: {
+      userID: string;
+      nickname: string;
+      faceURL: string;
+    };
   }
 }

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-惠泽苍生 - 多端资产同步脚本
+兴村振兴3.0 - 多端资产同步脚本
 用途：将源图片按命名规范分发至各端口目录
 
 使用方法：
@@ -82,7 +82,7 @@ def sync(source: str, asset_id: str, version: str):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="惠泽苍生多端资产同步工具")
+    parser = argparse.ArgumentParser(description="兴村振兴3.0多端资产同步工具")
     parser.add_argument("--source", required=True, help="源图片路径")
     parser.add_argument("--asset", required=True, help="资产ID (如: splash_launch)")
     parser.add_argument("--version", default="v1.0.0", help="版本号 (如: v1.0.0)")

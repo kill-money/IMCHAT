@@ -53,14 +53,12 @@ class _RegisterPageState extends State<RegisterPage> {
       phoneNumber: phone,
       password: password,
       invitationCode: _inviteCodeController.text.trim(),
-      downloadReferrer: ApiConfig.downloadReferrer, // 二开：推荐人 ID
+      downloadReferrer: ApiConfig.downloadReferrer, // 推荐人 ID
     );
     if (!mounted) return;
     if (success) {
       final receptionistID = auth.lastReceptionistID;
-      final msg = receptionistID.isNotEmpty
-          ? '注册成功，已绑定您的专属接待员'
-          : '注册成功，请登录';
+      final msg = receptionistID.isNotEmpty ? '注册成功，已绑定您的专属接待员' : '注册成功，请登录';
       AppFeedback.success(context, msg);
       Navigator.of(context).pop();
     }
@@ -107,10 +105,12 @@ class _RegisterPageState extends State<RegisterPage> {
                           value: _areaCode,
                           decoration: const InputDecoration(
                             isDense: true,
-                            contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+                            contentPadding: EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 12),
                           ),
                           items: const [
-                            DropdownMenuItem(value: '+86', child: AppText('+86')),
+                            DropdownMenuItem(
+                                value: '+86', child: AppText('+86')),
                             DropdownMenuItem(value: '+1', child: AppText('+1')),
                           ],
                           onChanged: (v) => setState(() => _areaCode = v!),
@@ -143,8 +143,8 @@ class _RegisterPageState extends State<RegisterPage> {
                               : Icons.visibility,
                           color: AppColors.textSecondary,
                         ),
-                        onPressed: () =>
-                            setState(() => _obscurePassword = !_obscurePassword),
+                        onPressed: () => setState(
+                            () => _obscurePassword = !_obscurePassword),
                       ),
                     ),
                   ),
@@ -162,7 +162,8 @@ class _RegisterPageState extends State<RegisterPage> {
                     duration: const Duration(milliseconds: 200),
                     child: auth.error.isNotEmpty
                         ? Container(
-                            margin: const EdgeInsets.only(bottom: AppSpacing.md),
+                            margin:
+                                const EdgeInsets.only(bottom: AppSpacing.md),
                             padding: const EdgeInsets.symmetric(
                               horizontal: AppSpacing.md,
                               vertical: AppSpacing.sm,

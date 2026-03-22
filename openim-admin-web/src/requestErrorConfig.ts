@@ -1,6 +1,7 @@
 ﻿import type { RequestOptions } from '@@/plugin-request/request';
 import type { RequestConfig } from '@umijs/max';
 import { message, notification } from 'antd';
+import { history } from '@umijs/max';
 
 // 错误处理方案： 错误类型
 enum ErrorShowType {
@@ -63,7 +64,10 @@ export const errorConfig: RequestConfig = {
               });
               break;
             case ErrorShowType.REDIRECT:
-              // TODO: redirect
+              message.error(errorMessage || '会话已过期，请重新登录');
+              localStorage.removeItem('openim_admin_token');
+              localStorage.removeItem('openim_im_token');
+              history.replace('/login');
               break;
             default:
               message.error(errorMessage);

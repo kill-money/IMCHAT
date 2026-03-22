@@ -8,8 +8,12 @@ class UserAvatar extends StatelessWidget {
   final double size;
   final bool showBadge;
   final int badgeCount;
-  /// 二开：用户端管理员角标（盾牌图标）
+
+  /// 用户端管理员角标（盾牌图标）
   final bool showAdminBadge;
+
+  /// 在线状态绿点（spec: 10px, #4CAF50, 右下角）
+  final bool isOnline;
 
   const UserAvatar({
     super.key,
@@ -19,6 +23,7 @@ class UserAvatar extends StatelessWidget {
     this.showBadge = false,
     this.badgeCount = 0,
     this.showAdminBadge = false,
+    this.isOnline = false,
   });
 
   @override
@@ -43,7 +48,7 @@ class UserAvatar extends StatelessWidget {
           );
 
     final hasBadge = showBadge && badgeCount > 0;
-    if (!hasBadge && !showAdminBadge) return avatar;
+    if (!hasBadge && !showAdminBadge && !isOnline) return avatar;
 
     return Stack(
       clipBehavior: Clip.none,
@@ -55,7 +60,28 @@ class UserAvatar extends StatelessWidget {
             top: -4,
             child: AppBadge(count: badgeCount),
           ),
-        if (showAdminBadge)
+        // 在线绿点 — AnimatedOpacity 避免 UI 闪烁，isOnline 变化时平滑淡入/出
+        Positioned(
+          right: -1,
+          bottom: -1,
+          child: AnimatedOpacity(
+            opacity: isOnline ? 1.0 : 0.0,
+            duration: const Duration(milliseconds: 300),
+            child: Container(
+              width: 10,
+              height: 10,
+              decoration: BoxDecoration(
+                color: AppColors.success,
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: AppColors.cardBackground,
+                  width: 1.5,
+                ),
+              ),
+            ),
+          ),
+        ),
+        if (!isOnline && showAdminBadge)
           Positioned(
             right: -2,
             bottom: -2,

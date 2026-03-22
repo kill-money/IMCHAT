@@ -12,17 +12,11 @@ const InvitationManage: React.FC = () => {
   const columns: ProColumns<OPENIM.InvitationCode>[] = [
     { title: '邀请码', dataIndex: 'invitationCode', width: 260, copyable: true },
     {
-      title: '使用次数',
-      dataIndex: 'usedTimes',
-      width: 90,
+      title: '已使用者ID',
+      dataIndex: 'usedUserID',
+      width: 200,
       search: false,
-    },
-    {
-      title: '最后使用时间',
-      dataIndex: 'lastUsedTime',
-      width: 170,
-      search: false,
-      render: (_, r) => r.lastUsedTime ? dayjs(r.lastUsedTime).format('YYYY-MM-DD HH:mm') : '-',
+      render: (_, r) => r.usedUserID || '-',
     },
     {
       title: '创建时间',
@@ -57,7 +51,7 @@ const InvitationManage: React.FC = () => {
       <ProTable<OPENIM.InvitationCode>
         headerTitle="邀请码管理"
         actionRef={actionRef}
-        rowKey="code"
+        rowKey="invitationCode"
         columns={columns}
         toolBarRender={() => [
           <ModalForm
@@ -81,10 +75,10 @@ const InvitationManage: React.FC = () => {
         request={async (params) => {
           const resp = await searchInvitationCodes(
             { pageNumber: params.current || 1, showNumber: params.pageSize || 20 },
-            params.code,
+            params.invitationCode,
           );
           return {
-            data: resp.data?.invitationCodes || [],
+            data: resp.data?.list || [],
             total: resp.data?.total || 0,
             success: resp.errCode === 0,
           };

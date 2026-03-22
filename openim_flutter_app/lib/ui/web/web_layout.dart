@@ -3,12 +3,14 @@ import 'package:provider/provider.dart';
 import '../../core/controllers/auth_controller.dart';
 import '../../core/controllers/conversation_controller.dart';
 import '../../core/controllers/chat_controller.dart';
+import '../../core/controllers/status_controller.dart'; // 在线状态
 import '../../core/api/api_client.dart';
 import '../../shared/widgets/conversation_item.dart';
 import '../../shared/widgets/chat_bubble.dart';
 import '../../shared/widgets/message_input.dart';
 import 'pages/web_contacts_page.dart';
 import 'pages/web_settings_page.dart';
+import '../../shared/theme/colors.dart' show AppColors;
 
 class WebLayout extends StatefulWidget {
   const WebLayout({super.key});
@@ -24,10 +26,24 @@ class _WebLayoutState extends State<WebLayout> {
   @override
   void initState() {
     super.initState();
-    final convCtrl = context.read<ConversationController>();
-    Future.microtask(() {
-      convCtrl.loadConversations();
+    debugPrint('[PAGE_INIT] WebLayout');
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      await context.read<ConversationController>().loadConversations();
+      if (!mounted) return;
+      context.read<ConversationController>().debugPrintState();
+      _fetchStatuses();
     });
+  }
+
+  void _fetchStatuses() {
+    final convCtrl = context.read<ConversationController>();
+    final statusCtrl = context.read<StatusController>();
+    final ids = convCtrl.conversations
+        .where((c) => c.conversationType == 1 && c.userID.isNotEmpty)
+        .map((c) => c.userID)
+        .toList();
+    statusCtrl.fetchStatuses(ids);
   }
 
   @override
@@ -44,17 +60,13 @@ class _WebLayoutState extends State<WebLayout> {
   PreferredSizeWidget _buildTopNav() {
     final auth = context.watch<AuthController>();
     return AppBar(
-      title: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Text('OpenIM', style: TextStyle(fontSize: 18)),
-          const SizedBox(width: 32),
-          _tabButton('消息', Icons.chat, 0),
-          _tabButton('通讯录', Icons.contacts, 1),
-          _tabButton('设置', Icons.settings, 2),
-        ],
-      ),
+      title: const Text('乡村振兴3.0', style: TextStyle(fontSize: 18)),
+      titleSpacing: 12,
       actions: [
+        _tabButton('消息', Icons.chat, 0),
+        _tabButton('通讯录', Icons.contacts, 1),
+        _tabButton('设置', Icons.settings, 2),
+        const SizedBox(width: 8),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 8),
           child: Center(
@@ -84,18 +96,16 @@ class _WebLayoutState extends State<WebLayout> {
       child: TextButton.icon(
         onPressed: () => setState(() => _tabIndex = index),
         icon: Icon(icon,
-            size: 18,
-            color: selected ? Colors.white : Colors.white60),
+            size: 18, color: selected ? Colors.white : Colors.white70),
         label: Text(label,
             style: TextStyle(
               fontSize: 13,
-              color: selected ? Colors.white : Colors.white60,
+              color: selected ? Colors.white : Colors.white70,
               fontWeight: selected ? FontWeight.bold : FontWeight.normal,
             )),
         style: TextButton.styleFrom(
-          backgroundColor: selected ? Colors.white.withAlpha(25) : null,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+          backgroundColor: selected ? Colors.white.withAlpha(30) : null,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
         ),
       ),
     );
@@ -125,7 +135,7 @@ class _WebLayoutState extends State<WebLayout> {
     return Row(
       children: [
         SizedBox(width: 320, child: _buildConversationList()),
-        VerticalDivider(width: 1, color: Colors.grey[300]),
+        VerticalDivider(width: 1, color: AppColors.divider),
         Expanded(child: _buildChatPanel()),
       ],
     );
@@ -133,6 +143,7 @@ class _WebLayoutState extends State<WebLayout> {
 
   Widget _buildConversationList() {
     final controller = context.watch<ConversationController>();
+    final statusCtrl = context.watch<StatusController>();
     return Column(
       children: [
         Padding(
@@ -146,7 +157,7 @@ class _WebLayoutState extends State<WebLayout> {
                 borderSide: BorderSide.none,
               ),
               filled: true,
-              fillColor: Colors.grey[100],
+              fillColor: AppColors.pageBackground,
               isDense: true,
               contentPadding: const EdgeInsets.symmetric(vertical: 10),
             ),
@@ -161,6 +172,9 @@ class _WebLayoutState extends State<WebLayout> {
                     final conv = controller.conversations[index];
                     return ConversationItem(
                       conversation: conv,
+                      userStatus: conv.conversationType == 1
+                          ? statusCtrl.getStatus(conv.userID)
+                          : null,
                       selected: conv.conversationID == _selectedConversationID,
                       onTap: () {
                         setState(() {
@@ -182,14 +196,14 @@ class _WebLayoutState extends State<WebLayout> {
     if (_selectedConversationID == null) {
       return const Center(
         child: Text('选择一个会话开始聊天',
-            style: TextStyle(color: Colors.grey, fontSize: 14)),
+            style: TextStyle(color: AppColors.textSecondary, fontSize: 14)),
       );
     }
 
     final convCtrl = context.read<ConversationController>();
     final conv = convCtrl.getById(_selectedConversationID!);
     final chat = context.watch<ChatController>();
-    final messages = chat.currentMessages;
+    final messages = chat.displayMessages;
 
     return Column(
       children: [
@@ -198,7 +212,7 @@ class _WebLayoutState extends State<WebLayout> {
           height: 48,
           padding: const EdgeInsets.symmetric(horizontal: 12),
           decoration: BoxDecoration(
-            border: Border(bottom: BorderSide(color: Colors.grey[200]!)),
+            border: Border(bottom: BorderSide(color: AppColors.divider)),
           ),
           child: Row(
             children: [

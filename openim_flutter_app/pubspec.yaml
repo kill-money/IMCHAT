@@ -36,13 +36,31 @@ dependencies:
   cupertino_icons: ^1.0.8
   http: ^1.2.0
   provider: ^6.1.0
+  web_socket_channel: ^3.0.0  # 在线状态 WebSocket
+  image_picker: ^1.1.2        # 图片/视频选取（消息类型 P0）
+  file_picker: ^8.1.7         # 文件选取（消息类型 P0）
+  record: ^6.2.0              # 语音录制（消息类型 P0）
+  audioplayers: ^6.0.0        # 语音消息播放
+  permission_handler: ^11.3.1 # 运行时权限（麦克风/存储）
+  path_provider: ^2.1.2       # 临时目录（语音文件存储）+ Windows 桌面插件注册
+  share_plus: ^10.0.0         # 群邀请链接分享（P1）
+  url_launcher: ^6.3.0        # 打开视频/文件/地图链接
+  app_links: ^6.3.3           # Deep link 接收 openim:// 链接
   window_manager: ^0.4.0
   system_tray: ^2.0.3
+  crypto: ^3.0.3          # SHA-256 密码哈希（登录/注册时加密后再传输）
+  photo_view: ^0.15.0     # 图片全屏预览（缩放/滑动）
+  flutter_secure_storage: ^9.2.4  # 安全 Token 存储（Keychain/KeyStore/libsecret）
   flutter_localizations:
     sdk: flutter
+  shared_preferences: ^2.5.3
+  connectivity_plus: ^6.1.0  # 网络状态检测（retry 队列暂停）
+  flutter_openim_sdk: ^3.8.0  # OpenIM 原生 SDK（WebSocket + 离线消息 + 同步）
 
 dev_dependencies:
   flutter_test:
+    sdk: flutter
+  integration_test:
     sdk: flutter
 
   # The "flutter_lints" package below contains a set of recommended lints to
@@ -51,6 +69,18 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^5.0.0
+  flutter_launcher_icons: ^0.14.3
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/app_icon.png"
+  web:
+    generate: true
+    image_path: "assets/app_icon.png"
+  windows:
+    generate: true
+    image_path: "assets/app_icon.png"
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -67,7 +97,10 @@ flutter:
     - assets/images/mobile/ios/
     - assets/images/desktop/
     - assets/images/web/
+    - assets/images/banners/
     - assets/config/
+    - assets/app_icon.png
+    - assets/audio/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

@@ -76,3 +76,52 @@ Three `ChangeNotifier` providers are registered globally in `main.dart`:
 ### Desktop Notes
 
 Desktop windows initialize via `lib/core/desktop_window.dart` (size: 1100×700, minimum: 800×600). Window close minimizes to system tray instead of quitting (uses `window_manager` + `system_tray` packages).
+
+## Backend Infrastructure (Docker)
+
+All backend services run inside **Docker containers** managed by `openim-docker/docker-compose.yaml` + `docker-compose.override.yml`.
+
+| Container | Image | Ports |
+|-----------|-------|-------|
+| openim-server | openim/openim-server:v3.8.x | 10001, 10002 |
+| openim-chat | openim-chat-local:latest | 10008, 10009 |
+| mongo | mongo:7.0 | 37017 |
+| redis | redis:7.0 | 16379 |
+
+### ⚠️ CRITICAL: Rebuilding after Go source changes
+
+The `openim-chat` service (ports 10008/10009) is built from local source at `openim-chat/`. **After any Go source code change, the Docker image MUST be rebuilt and the container restarted**, otherwise changes have no effect.
+
+```bash
+# Run from d:\procket\IMCHAT\openim-docker\
+docker build -t openim-chat-local:latest ../openim-chat
+docker compose -f docker-compose.yaml -f docker-compose.override.yml up -d openim-chat
+```
+
+One-liner (stop → remove → rebuild → restart):
+```bash
+docker stop openim-chat ; docker rm openim-chat ; docker build -t openim-chat-local:latest ../openim-chat ; docker compose -f docker-compose.yaml -f docker-compose.override.yml up -d openim-chat
+```
+
+Wait for healthy status before testing:
+```bash
+docker ps --filter name=openim-chat
+# Expected: Up N seconds (healthy)
+```
+
+### Admin Web Dev Server
+
+The admin web (`openim-admin-web/`) runs on **port 8001** (UMI dev server). Start with:
+```bash
+cd openim-admin-web
+npm run dev
+```
+
+Default admin credentials: account `imAdmin`, password `openIM123`.
+
+### Proxy Configuration
+
+The UMI dev server proxies API calls via path prefix:
+- `/admin_api/` → `http://localhost:10009`
+- `/im_api/` → `http://localhost:10002`
+- `/chat_api/` → `http://localhost:10008`

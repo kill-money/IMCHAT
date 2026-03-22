@@ -6,13 +6,13 @@ import dayjs from 'dayjs';
 import React, { useRef } from 'react';
 
 const BlockManage: React.FC = () => {
-  const actionRef = useRef<ActionType>();
+  const actionRef = useRef<ActionType>(undefined);
 
   const columns: ProColumns<OPENIM.BlockUser>[] = [
     { title: '用户ID', dataIndex: 'userID', copyable: true, width: 180 },
     { title: '昵称', dataIndex: 'nickname', width: 120, search: false },
     { title: '封禁原因', dataIndex: 'reason', width: 200, search: false },
-    { title: '操作人', dataIndex: 'opAdminAccount', width: 120, search: false },
+    { title: '操作人', dataIndex: 'opUserID', width: 120, search: false },
     {
       title: '封禁时间',
       dataIndex: 'createTime',
@@ -56,7 +56,7 @@ const BlockManage: React.FC = () => {
             params.userID,
           );
           return {
-            data: resp.data?.blocks || [],
+            data: resp.data?.users || [],
             total: resp.data?.total || 0,
             success: resp.errCode === 0,
           };

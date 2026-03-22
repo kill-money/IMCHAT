@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../core/controllers/auth_controller.dart';
+import '../../core/controllers/config_controller.dart';
 import '../theme/colors.dart';
 import '../theme/spacing.dart';
 import '../widgets/ui/app_button.dart';
@@ -72,7 +73,11 @@ class _AuthPageState extends State<AuthPage>
       password: pass,
     );
     if (!mounted) return;
-    if (ok) Navigator.of(context).pushReplacementNamed('/home');
+    if (ok) {
+      await context.read<ConfigController>().load();
+      if (!mounted) return;
+      Navigator.of(context).pushReplacementNamed('/home');
+    }
   }
 
   void _register() async {
@@ -109,7 +114,7 @@ class _AuthPageState extends State<AuthPage>
         height: 48,
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          border: Border.all(color: const Color(0xFFEEEEEE)),
+          border: Border.all(color: AppColors.divider),
           borderRadius: BorderRadius.circular(12),
         ),
         child: const Text(
@@ -134,8 +139,7 @@ class _AuthPageState extends State<AuthPage>
         const SizedBox(width: AppSpacing.sm),
         Expanded(
           child: AppText(error,
-              isSmall: true,
-              style: const TextStyle(color: AppColors.danger)),
+              isSmall: true, style: const TextStyle(color: AppColors.danger)),
         ),
       ]),
     );
@@ -168,8 +172,7 @@ class _AuthPageState extends State<AuthPage>
                 icon: Icon(
                     _loginObscure ? Icons.visibility_off : Icons.visibility,
                     color: AppColors.textSecondary),
-                onPressed: () =>
-                    setState(() => _loginObscure = !_loginObscure),
+                onPressed: () => setState(() => _loginObscure = !_loginObscure),
               ),
             ),
           ),
@@ -179,6 +182,17 @@ class _AuthPageState extends State<AuthPage>
               label: '登 录',
               onPressed: auth.loading ? null : _login,
               loading: auth.loading),
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton(
+              onPressed: () =>
+                  Navigator.of(context).pushNamed('/forgot-password'),
+              child: const Text(
+                '忘记密码？',
+                style: TextStyle(color: AppColors.primary, fontSize: 13),
+              ),
+            ),
+          ),
         ],
       );
 
@@ -222,8 +236,7 @@ class _AuthPageState extends State<AuthPage>
           TextField(
             controller: _regInviteCtrl,
             decoration: const InputDecoration(
-                labelText: '邀请码（选填）',
-                prefixIcon: Icon(Icons.card_giftcard)),
+                labelText: '邀请码（选填）', prefixIcon: Icon(Icons.card_giftcard)),
           ),
           const SizedBox(height: AppSpacing.lg),
           _errorBanner(auth.error),
@@ -249,7 +262,7 @@ class _AuthPageState extends State<AuthPage>
               const Icon(Icons.volunteer_activism,
                   size: 64, color: AppColors.primary),
               const SizedBox(height: AppSpacing.sm),
-              const AppText('惠泽苍生',
+              const AppText('乡村振兴3.0',
                   isTitle: true, textAlign: TextAlign.center),
               const SizedBox(height: AppSpacing.xs),
               const AppText('精准扶贫 · 共同富裕',

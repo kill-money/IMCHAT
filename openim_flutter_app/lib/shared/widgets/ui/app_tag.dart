@@ -4,7 +4,7 @@ import '../../theme/spacing.dart';
 import 'app_text.dart';
 
 enum AppTagType {
-  green,
+  primary,
   orange,
 }
 
@@ -16,14 +16,14 @@ class AppTag extends StatelessWidget {
   const AppTag({
     super.key,
     required this.label,
-    this.type = AppTagType.green,
+    this.type = AppTagType.primary,
   });
 
   Color get _background {
     switch (type) {
       case AppTagType.orange:
         return AppColors.accent.withValues(alpha: 0.1);
-      case AppTagType.green:
+      case AppTagType.primary:
         return AppColors.primary.withValues(alpha: 0.1);
     }
   }
@@ -32,13 +32,14 @@ class AppTag extends StatelessWidget {
     switch (type) {
       case AppTagType.orange:
         return AppColors.accent;
-      case AppTagType.green:
+      case AppTagType.primary:
         return AppColors.primary;
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.md,
@@ -52,11 +53,10 @@ class AppTag extends StatelessWidget {
         label,
         isSmall: true,
         style: TextStyle(
-          color: _foreground,
+          color: AppColors.contrastSafe(_foreground, brightness),
           fontWeight: FontWeight.w500,
         ),
       ),
     );
   }
 }
-

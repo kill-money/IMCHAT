@@ -10,6 +10,8 @@ import '../../../shared/widgets/ui/app_card.dart';
 import '../../../shared/widgets/ui/app_header.dart';
 import '../../../shared/widgets/ui/app_text.dart';
 import 'mobile_wallet_page.dart';
+import '../../../shared/pages/profile_edit_page.dart';
+import '../../../shared/pages/starred_messages_page.dart';
 
 class MobileProfilePage extends StatefulWidget {
   const MobileProfilePage({super.key});
@@ -25,7 +27,10 @@ class _MobileProfilePageState extends State<MobileProfilePage> {
   @override
   void initState() {
     super.initState();
-    final user = context.read<AuthController>().currentUser;
+    final auth = context.read<AuthController>();
+    final user = auth.currentUser;
+    // 每次进入"我的"页面时从服务端刷新最新资料
+    auth.refreshUserInfo();
     if (user != null && user.isAppAdmin) _loadMyIP(user.userID);
   }
 
@@ -37,7 +42,9 @@ class _MobileProfilePageState extends State<MobileProfilePage> {
         final ip = (res['data'] as Map?)?['lastIP']?.toString() ?? '';
         setState(() => _myIP = ip.isEmpty ? '暂无记录' : ip);
       }
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('获取IP信息失败: $e');
+    }
     setState(() => _ipLoading = false);
   }
 
@@ -61,6 +68,14 @@ class _MobileProfilePageState extends State<MobileProfilePage> {
           AppCard(
             padding: const EdgeInsets.all(AppSpacing.lg),
             margin: EdgeInsets.zero,
+            onTap: () async {
+              final changed = await Navigator.of(context).push<bool>(
+                MaterialPageRoute(builder: (_) => const ProfileEditPage()),
+              );
+              if (changed == true) {
+                context.read<AuthController>().refreshUserInfo();
+              }
+            },
             child: Row(
               children: [
                 UserAvatar(
@@ -86,17 +101,30 @@ class _MobileProfilePageState extends State<MobileProfilePage> {
                           color: AppColors.textSecondary,
                         ),
                       ),
+                      // 个性签名
+                      if (user != null && user.signature.isNotEmpty) ...[
+                        const SizedBox(height: 2),
+                        AppText(
+                          user.signature,
+                          isSmall: true,
+                          style:
+                              const TextStyle(color: AppColors.textSecondary),
+                        ),
+                      ],
                       // 仅管理员可见自己的 IP，普通用户不渲染
                       if (user != null && user.isAppAdmin) ...[
                         const SizedBox(height: 2),
                         _ipLoading
                             ? const SizedBox(
-                                width: 12, height: 12,
-                                child: CircularProgressIndicator(strokeWidth: 1.5))
+                                width: 12,
+                                height: 12,
+                                child:
+                                    CircularProgressIndicator(strokeWidth: 1.5))
                             : AppText(
                                 'IP: ${_myIP ?? '-'}',
                                 isSmall: true,
-                                style: const TextStyle(color: AppColors.textSecondary),
+                                style: const TextStyle(
+                                    color: AppColors.textSecondary),
                               ),
                       ],
                     ],
@@ -115,8 +143,17 @@ class _MobileProfilePageState extends State<MobileProfilePage> {
               builder: (_) => const MobileWalletPage(),
             ));
           }),
-          _buildItem(Icons.settings, '设置', () {}),
-          _buildItem(Icons.info_outline, '关于', () {}),
+          _buildItem(Icons.star_outline, '我的收藏', () {
+            Navigator.of(context).push(MaterialPageRoute(
+              builder: (_) => const StarredMessagesPage(),
+            ));
+          }),
+          _buildItem(Icons.settings, '设置', () {
+            Navigator.of(context).pushNamed('/settings');
+          }),
+          _buildItem(Icons.info_outline, '关于', () {
+            Navigator.of(context).pushNamed('/about');
+          }),
           const SizedBox(height: AppSpacing.xl),
           AppButton(
             label: '退出登录',
@@ -138,10 +175,10 @@ class _MobileProfilePageState extends State<MobileProfilePage> {
       child: ListTile(
         leading: Icon(icon, color: AppColors.primary),
         title: AppText(title),
-        trailing: const Icon(Icons.chevron_right, color: AppColors.textSecondary),
+        trailing:
+            const Icon(Icons.chevron_right, color: AppColors.textSecondary),
         onTap: onTap,
       ),
     );
   }
 }
-
